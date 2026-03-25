@@ -1,0 +1,29 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-imc-orange text-white font-semibold px-6 py-3 rounded-lg hover:bg-orange-600 transition-all duration-200 inline-flex items-center gap-2;
+  }
+  .btn-outline {
+    @apply border-2 border-imc-navy text-imc-navy font-semibold px-6 py-3 rounded-lg hover:bg-imc-navy hover:text-white transition-all duration-200 inline-flex items-center gap-2;
+  }
+  .section-title {
+    @apply text-3xl md:text-4xl font-bold text-imc-navy;
+  }
+  .card {
+    @apply bg-white rounded-2xl shadow-md hover:shadow-xl transition-shadow duration-300 p-6;
+  }
+}
