@@ -17,11 +17,21 @@ export async function GET() {
     if (admin?.password) {
       passwordMatch = await compare('123456', admin.password)
     }
+    // Check env vars
+    const envCheck = {
+      AUTH_SECRET: !!process.env.AUTH_SECRET,
+      NEXTAUTH_SECRET: !!process.env.NEXTAUTH_SECRET,
+      NEXTAUTH_URL: process.env.NEXTAUTH_URL,
+      secretsMatch: process.env.AUTH_SECRET === process.env.NEXTAUTH_SECRET,
+      authSecretPrefix: process.env.AUTH_SECRET?.substring(0, 5),
+      nextauthSecretPrefix: process.env.NEXTAUTH_SECRET?.substring(0, 5),
+    }
     return NextResponse.json({
       status: 'ok',
       db: 'connected',
       userCount,
       admin: admin ? { email: admin.email, role: admin.role, verified: !!admin.emailVerified, passwordMatch } : null,
+      envCheck,
       timestamp: new Date().toISOString(),
     })
   } catch (error) {
