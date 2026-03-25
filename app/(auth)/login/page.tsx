@@ -28,9 +28,18 @@ export default function LoginPage() {
         return;
       }
 
-      // Force a full page load so the JWT cookie is read by the server.
-      // The middleware will redirect SUPERADMIN users to /admin automatically.
-      window.location.href = "/cotizar";
+      // Fetch the session to determine role-based redirect destination.
+      const sessionRes = await fetch("/api/auth/session");
+      const session = await sessionRes.json();
+      const role = session?.user?.role;
+
+      if (role === "SUPERADMIN") {
+        window.location.href = "/admin";
+      } else if (role === "EXECUTIVE") {
+        window.location.href = "/ejecutivo";
+      } else {
+        window.location.href = "/cotizar";
+      }
     } catch {
       setError("Ocurrió un error inesperado. Intenta nuevamente.");
       setLoading(false);

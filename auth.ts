@@ -64,17 +64,27 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       const { pathname } = request.nextUrl
       const isLoggedIn = !!auth?.user
 
+      const role = (auth?.user as any)?.role
+
       // Admin routes require SUPERADMIN role
       if (pathname.startsWith('/admin')) {
         if (!isLoggedIn) return false
-        const role = (auth?.user as any)?.role
         if (role !== 'SUPERADMIN') {
           return Response.redirect(new URL('/no-autorizado', request.url))
         }
         return true
       }
 
-      // Protected client routes
+      // Executive routes require EXECUTIVE role
+      if (pathname.startsWith('/ejecutivo')) {
+        if (!isLoggedIn) return false
+        if (role !== 'EXECUTIVE') {
+          return Response.redirect(new URL('/no-autorizado', request.url))
+        }
+        return true
+      }
+
+      // Protected client routes (all authenticated users)
       const protectedPaths = ['/mi-cuenta', '/cotizar', '/mis-cotizaciones']
       const isProtected = protectedPaths.some((p) => pathname.startsWith(p))
       if (isProtected && !isLoggedIn) return false
@@ -91,7 +101,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async session({ session, token }) {
       if (token) {
         session.user.id = token.id as string
-        session.user.role = token.role as "CLIENT" | "SUPERADMIN"
+        session.user.role = token.role as "CLIENT" | "EXECUTIVE" | "SUPERADMIN"
       }
       return session
     },

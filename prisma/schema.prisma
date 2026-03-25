@@ -16,6 +16,7 @@ datasource db {
 
 enum Role {
   CLIENT
+  EXECUTIVE
   SUPERADMIN
 }
 
@@ -51,7 +52,7 @@ model User {
   email         String    @unique
   password      String
   name          String?
-  company       String?
+  company       String?   // legacy free-text company name
   phone         String?
   rut           String?
   role          Role      @default(CLIENT)
@@ -59,12 +60,62 @@ model User {
   verifyToken   String?
   resetToken    String?
   resetExpires  DateTime?
+  companyId     String?
+  companyRef    Company?  @relation(fields: [companyId], references: [id])
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  quotes Quote[]
+  quotes                Quote[]
+  executiveAssignments  ClientAssignment[] @relation("ExecutiveAssignments")
+  clientAssignments     ClientAssignment[] @relation("ClientAssignments")
 
   @@map("users")
+}
+
+model Company {
+  id                String   @id @default(cuid())
+  razonSocial       String
+  rut               String   @unique
+  giro              String
+  direccion         String
+  comuna            String
+  ciudad            String
+  region            String
+  telefono          String?
+  emailFacturacion  String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  users     User[]
+  documents CompanyDocument[]
+
+  @@map("companies")
+}
+
+model CompanyDocument {
+  id         String   @id @default(cuid())
+  companyId  String
+  company    Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  type       String   // RUT_EMPRESA | CERTIFICADO_SII | PODER_NOTARIAL
+  fileName   String
+  fileUrl    String
+  fileSize   Int
+  uploadedBy String
+  createdAt  DateTime @default(now())
+
+  @@map("company_documents")
+}
+
+model ClientAssignment {
+  id          String   @id @default(cuid())
+  executiveId String
+  executive   User     @relation("ExecutiveAssignments", fields: [executiveId], references: [id])
+  clientId    String
+  client      User     @relation("ClientAssignments", fields: [clientId], references: [id])
+  assignedAt  DateTime @default(now())
+
+  @@unique([executiveId, clientId])
+  @@map("client_assignments")
 }
 
 model Quote {
