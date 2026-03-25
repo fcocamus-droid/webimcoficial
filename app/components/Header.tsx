@@ -48,7 +48,7 @@ export default function Header() {
                 key={link.href}
                 href={link.href}
                 className={`text-sm font-medium transition-colors duration-200 hover:text-imc-orange ${
-                  scrolled ? "text-imc-navy" : "text-imc-navy"
+                  scrolled ? "text-imc-navy" : "text-white"
                 }`}
               >
                 {link.label}
