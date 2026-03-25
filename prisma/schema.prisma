@@ -1,0 +1,226 @@
+// prisma/schema.prisma
+// IMC Cargo - Cotizador de Flete Internacional
+// Powered by Supabase (PostgreSQL)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ===== ENUMS =====
+
+enum Role {
+  CLIENT
+  SUPERADMIN
+}
+
+enum QuoteStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
+
+enum ShipmentType {
+  LCL
+  FCL_20
+  FCL_40
+  FCL_40HC
+  AIR
+}
+
+enum Incoterm {
+  EXW
+  FOB
+  CFR
+  CIF
+  DAP
+  DDP
+}
+
+// ===== MODELS =====
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  name          String?
+  company       String?
+  phone         String?
+  rut           String?
+  role          Role      @default(CLIENT)
+  emailVerified DateTime?
+  verifyToken   String?
+  resetToken    String?
+  resetExpires  DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  quotes Quote[]
+
+  @@map("users")
+}
+
+model Quote {
+  id     String @id @default(cuid())
+  number String @unique // QTE-2025-0001
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+
+  // Shipment details
+  shipmentType ShipmentType
+  incoterm     Incoterm
+  originPort   String
+  destPort     String
+  commodity    String
+  hsCode       String?
+
+  // LCL
+  cbm      Float?
+  weightKg Float?
+
+  // FCL
+  containerQty Int?
+
+  // Air
+  chargeableKg Float?
+
+  // Cargo value
+  cargoValueUSD Float?
+
+  // Calculated costs (USD)
+  freightCost   Float
+  originCost    Float
+  destCost      Float
+  customsCost   Float?
+  insuranceCost Float?
+  totalCostUSD  Float
+  totalCostCLP  Float?
+
+  // Exchange rate used at quote time
+  usdClpRate Float?
+
+  // Metadata
+  status     QuoteStatus @default(DRAFT)
+  validUntil DateTime
+  notes      String?
+  pdfUrl     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items QuoteItem[]
+
+  @@map("quotes")
+}
+
+model QuoteItem {
+  id          String @id @default(cuid())
+  quoteId     String
+  quote       Quote  @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  description String
+  cost        Float
+  currency    String @default("USD")
+  // FREIGHT | ORIGIN | DESTINATION | CUSTOMS | INSURANCE | SURCHARGE | LAST_MILE
+  type        String
+
+  @@map("quote_items")
+}
+
+model Carrier {
+  id     String @id @default(cuid())
+  name   String
+  code   String @unique // MSC, CMA, HAPAG, LATAM
+  // MARITIME | AIR | MULTIMODAL
+  type   String
+  active Boolean @default(true)
+
+  rates ShippingRate[]
+
+  @@map("carriers")
+}
+
+model ShippingRate {
+  id         String   @id @default(cuid())
+  carrierId  String
+  carrier    Carrier  @relation(fields: [carrierId], references: [id])
+  originPort String
+  destPort   String
+  shipmentType ShipmentType
+
+  // LCL (W/M logic: max of CBM vs ton)
+  ratePerCBM Float?
+  ratePerTon Float?
+  minCBM     Float? @default(1)
+
+  // FCL
+  rateContainer Float?
+
+  // Air
+  ratePerKg Float?
+  minKg     Float?
+
+  currency  String   @default("USD")
+  validFrom DateTime
+  validTo   DateTime
+  active    Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("shipping_rates")
+}
+
+model Surcharge {
+  id           String       @id @default(cuid())
+  name         String
+  code         String       @unique // BAF, CAF, THC, ISPS, IMO, PSS
+  description  String?
+  amount       Float
+  currency     String       @default("USD")
+  shipmentType ShipmentType? // null = all types
+  portCode     String?       // null = all ports
+  active       Boolean      @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("surcharges")
+}
+
+model Port {
+  id      String  @id @default(cuid())
+  name    String
+  code    String  @unique // CLVAP, CLSAI, CNSHA, USLAX
+  country String
+  // SEA | AIR
+  type    String
+  active  Boolean @default(true)
+
+  @@map("ports")
+}
+
+model ExchangeRate {
+  id       String   @id @default(cuid())
+  usdToCLP Float
+  date     DateTime @default(now())
+
+  @@map("exchange_rates")
+}
+
+model LastMileZone {
+  id          String  @id @default(cuid())
+  region      String  // RM, V, VIII, etc.
+  description String
+  rateUSD     Float
+  active      Boolean @default(true)
+
+  @@map("last_mile_zones")
+}
