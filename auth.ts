@@ -60,6 +60,27 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
+    async authorized({ auth, request }) {
+      const { pathname } = request.nextUrl
+      const isLoggedIn = !!auth?.user
+
+      // Admin routes require SUPERADMIN role
+      if (pathname.startsWith('/admin')) {
+        if (!isLoggedIn) return false
+        const role = (auth?.user as any)?.role
+        if (role !== 'SUPERADMIN') {
+          return Response.redirect(new URL('/no-autorizado', request.url))
+        }
+        return true
+      }
+
+      // Protected client routes
+      const protectedPaths = ['/mi-cuenta', '/cotizar', '/mis-cotizaciones']
+      const isProtected = protectedPaths.some((p) => pathname.startsWith(p))
+      if (isProtected && !isLoggedIn) return false
+
+      return true
+    },
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id!
