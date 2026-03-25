@@ -32,6 +32,8 @@ export async function POST(req: Request) {
     const hashedPassword = await hash(data.password, 12);
     const verifyToken = crypto.randomUUID();
 
+    const hasResend = !!process.env.RESEND_API_KEY;
+
     await prisma.user.create({
       data: {
         name: data.name,
@@ -40,15 +42,15 @@ export async function POST(req: Request) {
         email: data.email,
         phone: data.phone,
         password: hashedPassword,
-        verifyToken,
-        emailVerified: null,
+        verifyToken: hasResend ? verifyToken : null,
+        // Auto-verify if email service is not configured
+        emailVerified: hasResend ? null : new Date(),
       },
     });
 
-    // Send verification email
-    const verifyUrl = `${process.env.NEXTAUTH_URL}/verificar-email?token=${verifyToken}`;
-
-    if (process.env.RESEND_API_KEY) {
+    if (hasResend) {
+      // Send verification email
+      const verifyUrl = `${process.env.NEXTAUTH_URL}/verificar-email?token=${verifyToken}`;
       const { Resend } = await import("resend");
       const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -64,12 +66,15 @@ export async function POST(req: Request) {
           <p>Si no creaste esta cuenta, ignora este correo.</p>
         `,
       });
-    } else {
-      console.log(`[DEV] Verification URL for ${data.email}: ${verifyUrl}`);
     }
 
     return NextResponse.json(
-      { message: "Usuario registrado exitosamente." },
+      {
+        message: hasResend
+          ? "Cuenta creada. Revisa tu correo para verificar tu cuenta."
+          : "Cuenta creada exitosamente. Ya puedes iniciar sesión.",
+        autoVerified: !hasResend,
+      },
       { status: 201 }
     );
   } catch (error) {
