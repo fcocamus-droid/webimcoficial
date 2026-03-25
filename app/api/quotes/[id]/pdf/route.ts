@@ -69,7 +69,7 @@ export async function GET(
       })),
     }
 
-    const buffer = await renderToBuffer(React.createElement(QuotePDF, { data: pdfData }))
+    const buffer = await renderToBuffer(React.createElement(QuotePDF, { data: pdfData }) as any)
 
     const filename = `cotizacion-${quote.number}.pdf`
 
