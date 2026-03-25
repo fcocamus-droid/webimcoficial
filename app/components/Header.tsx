@@ -56,8 +56,21 @@ export default function Header() {
             ))}
           </nav>
 
-          {/* CTA + Hamburger */}
-          <div className="flex items-center gap-4">
+          {/* CTA + Login + Hamburger */}
+          <div className="flex items-center gap-3">
+            <a
+              href="/login"
+              className={`hidden md:inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg border transition-colors duration-200 ${
+                scrolled
+                  ? "border-imc-navy text-imc-navy hover:bg-imc-navy hover:text-white"
+                  : "border-white text-white hover:bg-white hover:text-imc-navy"
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+              </svg>
+              Iniciar Sesión
+            </a>
             <a
               href="https://wa.me/56990014375"
               target="_blank"
@@ -102,6 +115,16 @@ export default function Header() {
                 {link.label}
               </a>
             ))}
+            <a
+              href="/login"
+              className="flex items-center justify-center gap-2 py-2.5 border border-imc-navy text-imc-navy font-medium rounded-lg hover:bg-imc-navy hover:text-white transition-colors"
+              onClick={() => setMenuOpen(false)}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+              </svg>
+              Iniciar Sesión
+            </a>
             <a
               href="https://wa.me/56990014375"
               target="_blank"
