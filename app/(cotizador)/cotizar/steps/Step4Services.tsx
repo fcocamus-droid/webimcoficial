@@ -43,8 +43,9 @@ export default function Step4Services() {
       </div>
 
       {/* Insurance */}
-      <label className="flex items-start gap-4 p-5 rounded-xl border-2 cursor-pointer transition-all hover:shadow-sm group
-        ${data.includeInsurance ? 'border-[#F47920] bg-[#F47920]/5' : 'border-gray-200 hover:border-gray-300'}">
+      <label className={`flex items-start gap-4 p-5 rounded-xl border-2 cursor-pointer transition-all hover:shadow-sm group ${
+        data.includeInsurance ? 'border-[#F47920] bg-[#F47920]/5' : 'border-gray-200 hover:border-gray-300'
+      }`}>
         <div className="relative flex-shrink-0 mt-0.5">
           <input
             type="checkbox"

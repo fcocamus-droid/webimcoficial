@@ -2,10 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 
-// Simple key-value store for settings using the ExchangeRate model + environment
-// For company settings, we store them in a JSON file approach or we use the latest ExchangeRate record
-// Here we use ExchangeRate for the rate value, and return static defaults for other settings
-
 export async function GET() {
   const session = await auth()
   if (!session || (session.user as any)?.role !== 'SUPERADMIN') {
@@ -17,13 +13,21 @@ export async function GET() {
     orderBy: { date: 'desc' },
   })
 
+  // Get all site_config rows
+  const configRows = await prisma.siteConfig.findMany()
+  const config: Record<string, string> = {}
+  for (const row of configRows) {
+    config[row.key] = row.value
+  }
+
   return NextResponse.json({
     usdToCLP: latestRate?.usdToCLP || 950,
-    quoteValidityDays: parseInt(process.env.QUOTE_VALIDITY_DAYS || '15'),
-    companyName: process.env.COMPANY_NAME || 'IMC Cargo',
-    companyRut: process.env.COMPANY_RUT || '',
-    companyAddress: process.env.COMPANY_ADDRESS || '',
-    companyPhone: process.env.COMPANY_PHONE || '',
+    quoteValidityDays: parseInt(config['quote_validity_days'] ?? '15'),
+    companyName: config['company_name'] ?? 'IMC Cargo',
+    companyRut: config['company_rut'] ?? '',
+    companyAddress: config['company_address'] ?? '',
+    companyPhone: config['company_phone'] ?? '',
+    companyEmail: config['company_email'] ?? '',
   })
 }
 
@@ -46,9 +50,26 @@ export async function PUT(req: NextRequest) {
       })
     }
 
-    // Note: Company settings (companyName, companyRut, etc.) would ideally
-    // be stored in a Settings model. For now, they are sourced from env vars.
-    // A full implementation would create a Settings model in Prisma.
+    // Persist company settings and quote validity to site_config
+    const settingsMap: Record<string, string | undefined> = {
+      company_name: body.companyName,
+      company_rut: body.companyRut,
+      company_address: body.companyAddress,
+      company_phone: body.companyPhone,
+      company_email: body.companyEmail,
+      quote_validity_days: body.quoteValidityDays != null
+        ? String(body.quoteValidityDays)
+        : undefined,
+    }
+
+    for (const [key, val] of Object.entries(settingsMap)) {
+      if (val === undefined) continue
+      await prisma.siteConfig.upsert({
+        where: { key },
+        update: { value: val },
+        create: { key, value: val },
+      })
+    }
 
     return NextResponse.json({ success: true })
   } catch (error: any) {

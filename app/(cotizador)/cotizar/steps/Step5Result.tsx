@@ -37,6 +37,7 @@ export default function Step5Result() {
   const [quoteResult, setQuoteResult] = useState<QuoteResult | null>(null)
   const [saving, setSaving] = useState(false)
   const [savedNumber, setSavedNumber] = useState<string | null>(null)
+  const [savedId, setSavedId] = useState<string | null>(null)
 
   useEffect(() => {
     async function calculate() {
@@ -80,6 +81,7 @@ export default function Step5Result() {
       }
       const saved = await res.json()
       setSavedNumber(saved.number)
+      setSavedId(saved.id)
     } catch (err: any) {
       alert(err.message || 'Error al guardar')
     } finally {
@@ -234,15 +236,30 @@ export default function Step5Result() {
 
       {/* Actions */}
       <div className="flex flex-col sm:flex-row gap-3">
-        <button
-          onClick={() => window.print()}
-          className="flex-1 flex items-center justify-center gap-2 px-6 py-3 border-2 border-[#1B2A6B] text-[#1B2A6B] rounded-xl text-sm font-semibold hover:bg-[#1B2A6B]/5 transition-colors"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          Descargar PDF
-        </button>
+        {savedId ? (
+          <a
+            href={`/api/quotes/${savedId}/pdf`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 flex items-center justify-center gap-2 px-6 py-3 border-2 border-[#1B2A6B] text-[#1B2A6B] rounded-xl text-sm font-semibold hover:bg-[#1B2A6B]/5 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Descargar PDF
+          </a>
+        ) : (
+          <button
+            disabled
+            title="Guarda la cotizacion primero para descargar el PDF"
+            className="flex-1 flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-200 text-gray-400 rounded-xl text-sm font-semibold cursor-not-allowed"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Descargar PDF
+          </button>
+        )}
 
         {!savedNumber && (
           <button

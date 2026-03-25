@@ -1,6 +1,7 @@
 'use client'
 
 import { create } from 'zustand'
+import { persist, createJSONStorage } from 'zustand/middleware'
 import type { WizardState, QuoteInput } from '@/types'
 
 interface QuoteWizardStore extends WizardState {
@@ -15,10 +16,18 @@ const initialState: WizardState = {
   result: undefined,
 }
 
-export const useQuoteWizard = create<QuoteWizardStore>((set) => ({
-  ...initialState,
-  setStep: (step) => set({ step }),
-  updateData: (data) =>
-    set((state) => ({ data: { ...state.data, ...data } })),
-  reset: () => set(initialState),
-}))
+export const useQuoteWizard = create<QuoteWizardStore>()(
+  persist(
+    (set) => ({
+      ...initialState,
+      setStep: (step) => set({ step }),
+      updateData: (data) =>
+        set((state) => ({ data: { ...state.data, ...data } })),
+      reset: () => set(initialState),
+    }),
+    {
+      name: 'imc-quote-wizard',
+      storage: createJSONStorage(() => sessionStorage),
+    }
+  )
+)

@@ -1,33 +1,32 @@
 // middleware.ts - Protección de rutas
-import { auth } from '@/auth'
+import { getToken } from 'next-auth/jwt'
 import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
-export default auth((req) => {
-  const { nextUrl, auth: session } = req
-  const isLoggedIn = !!session
+export async function middleware(req: NextRequest) {
+  const token = await getToken({ req, secret: process.env.AUTH_SECRET })
+  const { pathname } = req.nextUrl
 
-  // Rutas del admin requieren autenticación y rol SUPERADMIN
-  if (nextUrl.pathname.startsWith('/admin')) {
-    if (!isLoggedIn) {
+  // /admin/* — requires authentication AND SUPERADMIN role
+  if (pathname.startsWith('/admin')) {
+    if (!token) {
       return NextResponse.redirect(new URL('/login?callbackUrl=/admin', req.url))
     }
-    if ((session?.user as any)?.role !== 'SUPERADMIN') {
+    if (token.role !== 'SUPERADMIN') {
       return NextResponse.redirect(new URL('/no-autorizado', req.url))
     }
   }
 
-  // Rutas del cliente requieren autenticación
+  // /cotizar/* and /mis-cotizaciones/* — requires authentication only
   const protectedClientPaths = ['/mi-cuenta', '/cotizar', '/mis-cotizaciones']
-  const isProtectedClient = protectedClientPaths.some((p) => nextUrl.pathname.startsWith(p))
+  const isProtectedClient = protectedClientPaths.some((p) => pathname.startsWith(p))
 
-  if (isProtectedClient) {
-    if (!isLoggedIn) {
-      return NextResponse.redirect(new URL(`/login?callbackUrl=${nextUrl.pathname}`, req.url))
-    }
+  if (isProtectedClient && !token) {
+    return NextResponse.redirect(new URL(`/login?callbackUrl=${pathname}`, req.url))
   }
 
   return NextResponse.next()
-})
+}
 
 export const config = {
   matcher: ['/admin/:path*', '/mi-cuenta/:path*', '/cotizar/:path*', '/mis-cotizaciones/:path*'],

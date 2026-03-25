@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
-export default function VerificarEmailPage() {
+function VerificarEmailContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
@@ -79,5 +79,20 @@ export default function VerificarEmailPage() {
         </>
       )}
     </div>
+  );
+}
+
+export default function VerificarEmailPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="text-center py-4">
+          <div className="w-16 h-16 border-4 border-[#1B2A6B] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-[#1B2A6B]">Cargando...</h2>
+        </div>
+      }
+    >
+      <VerificarEmailContent />
+    </Suspense>
   );
 }

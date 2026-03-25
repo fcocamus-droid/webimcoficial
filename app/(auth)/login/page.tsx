@@ -2,11 +2,9 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -30,15 +28,9 @@ export default function LoginPage() {
         return;
       }
 
-      // Fetch session to determine role-based redirect
-      const sessionRes = await fetch("/api/auth/session");
-      const session = await sessionRes.json();
-
-      if (session?.user?.role === "SUPERADMIN") {
-        router.push("/admin");
-      } else {
-        router.push("/cotizar");
-      }
+      // Force a full page load so the JWT cookie is read by the server.
+      // The middleware will redirect SUPERADMIN users to /admin automatically.
+      window.location.href = "/cotizar";
     } catch {
       setError("Ocurrió un error inesperado. Intenta nuevamente.");
       setLoading(false);

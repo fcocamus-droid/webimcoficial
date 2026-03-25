@@ -71,6 +71,12 @@ export function assembleQuote(input: CalcInput, params: AssembleParams): CalcRes
     })
   }
 
+  // --- Surcharge classification map ---
+  // Explicitly classify known surcharge codes as ORIGIN or DESTINATION.
+  // Any code not listed here is treated as a freight/general surcharge.
+  const ORIGIN_SURCHARGES = new Set(['THC_O', 'AMS', 'SEAL'])
+  const DESTINATION_SURCHARGES = new Set(['THC_D', 'ISPS'])
+
   // --- Surcharges ---
   let originCost = 0
   let destCost = 0
@@ -85,13 +91,15 @@ export function assembleQuote(input: CalcInput, params: AssembleParams): CalcRes
       type: 'SURCHARGE',
     })
 
-    // Classify surcharges into origin/destination by code convention
+    // Classify surcharges into origin/destination using the explicit map
     const code = surcharge.code.toUpperCase()
-    if (code.startsWith('O') || code.includes('ORIG')) {
+    if (ORIGIN_SURCHARGES.has(code)) {
       originCost = round2(originCost + amount)
-    } else if (code.startsWith('D') || code.includes('DEST')) {
+    } else if (DESTINATION_SURCHARGES.has(code)) {
       destCost = round2(destCost + amount)
     }
+    // BAF, CAF, BL, and other general surcharges are not added to origin/dest
+    // totals — they roll up into the overall totalUSD via surchargeTotal below
   }
 
   // --- Customs ---

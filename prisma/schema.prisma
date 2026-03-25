@@ -224,3 +224,12 @@ model LastMileZone {
 
   @@map("last_mile_zones")
 }
+
+model SiteConfig {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+
+  @@map("site_config")
+}
