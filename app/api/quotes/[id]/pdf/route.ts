@@ -73,12 +73,13 @@ export async function GET(
 
     const filename = `cotizacion-${quote.number}.pdf`
 
-    return new NextResponse(buffer, {
+    const uint8 = new Uint8Array(buffer)
+    return new NextResponse(uint8, {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="${filename}"`,
-        'Content-Length': String(buffer.byteLength),
+        'Content-Length': String(uint8.byteLength),
         'Cache-Control': 'no-store',
       },
     })
