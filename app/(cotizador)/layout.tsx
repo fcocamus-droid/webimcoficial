@@ -89,7 +89,7 @@ function Navbar() {
                     </Link>
                     <hr className="my-1 border-gray-100" />
                     <Link
-                      href="/api/auth/signout"
+                      href="/signout"
                       className="block px-4 py-2.5 text-sm text-red-600 hover:bg-red-50"
                       onClick={() => setMenuOpen(false)}
                     >
@@ -158,7 +158,7 @@ function Navbar() {
                 Mi Cuenta
               </Link>
               <Link
-                href="/api/auth/signout"
+                href="/signout"
                 className="block px-3 py-2 rounded-lg text-sm text-red-300 hover:bg-white/10"
                 onClick={() => setMobileOpen(false)}
               >
