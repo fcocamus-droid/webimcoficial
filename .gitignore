@@ -35,3 +35,7 @@ next-env.d.ts
 
 # Historical data extraction (sensitive)
 imcbox-data/
+
+# Service account keys (NEVER commit)
+**/secrets/
+*-firebase-adminsdk-*.json

@@ -6,8 +6,10 @@ import { useSession, SessionProvider } from 'next-auth/react'
 import { useState, useRef, useEffect } from 'react'
 
 const navLinks = [
+  { href: '/dashboard', label: 'Inicio' },
   { href: '/cotizar', label: 'Cotizar' },
-  { href: '/mis-cotizaciones', label: 'Mis Cotizaciones' },
+  { href: '/mis-cotizaciones', label: 'Cotizaciones' },
+  { href: '/operaciones', label: 'Operaciones' },
 ]
 
 function Navbar() {
