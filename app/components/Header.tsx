@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import Image from "next/image";
+import IMCLogo from "./brand/IMCLogo";
 
 const navLinks = [
   { label: "Inicio", href: "#inicio" },
@@ -31,13 +31,10 @@ export default function Header() {
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <a href="#inicio" className="flex items-center gap-3">
-            <Image
-              src="https://importadoraimc.cl/cdn/shop/files/logo_nuevo.png"
-              alt="IMC Logo"
-              width={140}
-              height={48}
-              className="h-12 w-auto object-contain"
-              unoptimized
+            <IMCLogo
+              variant={scrolled ? "default" : "mono-white"}
+              size="md"
+              showWordmark
             />
           </a>
 
