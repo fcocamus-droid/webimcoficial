@@ -73,15 +73,33 @@ export default function UsuariosPage() {
     return matchSearch && matchRole
   })
 
-  const toggleRole = async (user: User) => {
-    const newRole = user.role === 'SUPERADMIN' ? 'CLIENT' : 'SUPERADMIN'
-    if (!confirm(`¿Cambiar rol de ${user.email} a ${newRole}?`)) return
+  const changeRole = async (user: User, newRole: string) => {
+    if (newRole === user.role) return
+    if (!confirm(`¿Cambiar rol de ${user.email} a ${ROLE_LABELS[newRole] || newRole}?`)) return
     await fetch(`/api/admin/users/${user.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ role: newRole }),
     })
     fetchUsers()
+  }
+
+  const [resetLinkModal, setResetLinkModal] = useState<{ email: string; url: string; expiresAt: string } | null>(null)
+  const [generatingReset, setGeneratingReset] = useState<string | null>(null)
+
+  const generateResetLink = async (user: User) => {
+    setGeneratingReset(user.id)
+    try {
+      const res = await fetch(`/api/admin/users/${user.id}/reset-link`, { method: 'POST' })
+      if (res.ok) {
+        const data = await res.json()
+        setResetLinkModal({ email: data.email, url: data.resetUrl, expiresAt: data.expiresAt })
+      } else {
+        alert('Error al generar enlace')
+      }
+    } finally {
+      setGeneratingReset(null)
+    }
   }
 
   const handleCreateSubmit = async (e: React.FormEvent) => {
@@ -231,9 +249,15 @@ export default function UsuariosPage() {
                   <td className="px-6 py-3">{u.email}</td>
                   <td className="px-6 py-3">{u.company || '—'}</td>
                   <td className="px-6 py-3">
-                    <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${ROLE_BADGE[u.role] ?? 'bg-gray-100 text-gray-700'}`}>
-                      {ROLE_LABELS[u.role] ?? u.role}
-                    </span>
+                    <select
+                      value={u.role}
+                      onChange={(e) => changeRole(u, e.target.value)}
+                      className={`text-xs font-medium px-2 py-1 rounded-full border-0 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#F47920]/30 ${ROLE_BADGE[u.role] ?? 'bg-gray-100 text-gray-700'}`}
+                    >
+                      <option value="CLIENT">Cliente</option>
+                      <option value="EXECUTIVE">Ejecutivo</option>
+                      <option value="SUPERADMIN">Admin</option>
+                    </select>
                   </td>
                   <td className="px-6 py-3">
                     {u.emailVerified ? (
@@ -246,12 +270,14 @@ export default function UsuariosPage() {
                     {new Date(u.createdAt).toLocaleDateString('es-CL')}
                   </td>
                   <td className="px-6 py-3">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
                       <button
-                        onClick={() => toggleRole(u)}
-                        className="text-[#1B2A6B] hover:text-blue-800 text-xs font-medium"
+                        onClick={() => generateResetLink(u)}
+                        disabled={generatingReset === u.id}
+                        className="text-[#1B2A6B] hover:text-blue-800 text-xs font-medium disabled:opacity-50"
+                        title="Generar enlace para restablecer contraseña"
                       >
-                        Cambiar Rol
+                        {generatingReset === u.id ? 'Generando…' : '🔑 Reset'}
                       </button>
                       {u.role === 'EXECUTIVE' && (
                         <button
@@ -348,6 +374,47 @@ export default function UsuariosPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ===== Reset Link Modal ===== */}
+      {resetLinkModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setResetLinkModal(null)} />
+          <div className="relative bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 p-6">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-lg font-bold text-gray-900">Enlace de recuperación</h2>
+              <button onClick={() => setResetLinkModal(null)} className="text-gray-400 hover:text-gray-600">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <p className="text-sm text-gray-600 mb-3">
+              Enlace de un solo uso para que <strong>{resetLinkModal.email}</strong> defina su contraseña.
+              Válido hasta <strong>{new Date(resetLinkModal.expiresAt).toLocaleString('es-CL')}</strong>.
+            </p>
+            <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 mb-3">
+              <p className="font-mono text-xs text-slate-700 break-all">{resetLinkModal.url}</p>
+            </div>
+            <div className="flex gap-2 mb-3">
+              <button
+                onClick={() => { navigator.clipboard.writeText(resetLinkModal.url); alert('Copiado al portapapeles') }}
+                className="flex-1 px-4 py-2 bg-[#F47920] hover:bg-orange-600 text-white text-sm font-medium rounded-lg"
+              >
+                📋 Copiar enlace
+              </button>
+              <a
+                href={`mailto:${resetLinkModal.email}?subject=${encodeURIComponent('Restablece tu contraseña - IMC Cargo')}&body=${encodeURIComponent(`Hola,\n\nPara definir tu contraseña, haz clic en este enlace (válido 24h):\n\n${resetLinkModal.url}\n\nSaludos,\nIMC Cargo`)}`}
+                className="flex-1 px-4 py-2 border border-[#1B2A6B] text-[#1B2A6B] hover:bg-[#1B2A6B] hover:text-white text-sm font-medium rounded-lg text-center"
+              >
+                ✉️ Enviar por email
+              </a>
+            </div>
+            <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg p-2">
+              ⚠️ Resend no está configurado. Mientras tanto, comparte este enlace manualmente.
+            </p>
           </div>
         </div>
       )}
