@@ -137,7 +137,11 @@ export default function MisCotizacionesPage() {
                 {quotes.map((q) => {
                   const statusInfo = STATUS_LABELS[q.status] || STATUS_LABELS.DRAFT
                   return (
-                    <tr key={q.id} className="border-t border-gray-100 hover:bg-gray-50 transition-colors">
+                    <tr
+                      key={q.id}
+                      onClick={() => router.push(`/mis-cotizaciones/${q.id}`)}
+                      className="border-t border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer"
+                    >
                       <td className="px-4 py-3 font-medium text-[#1B2A6B]">{q.number}</td>
                       <td className="px-4 py-3 text-gray-600">
                         {new Date(q.createdAt).toLocaleDateString('es-CL')}
@@ -157,17 +161,26 @@ export default function MisCotizacionesPage() {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-center">
-                        <a
-                          href={`/api/quotes/${q.id}/pdf`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex text-[#1B2A6B] hover:text-[#F47920] transition-colors p-1"
-                          title="Descargar PDF"
-                        >
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          </svg>
-                        </a>
+                        <div className="flex items-center justify-center gap-2" onClick={(e) => e.stopPropagation()}>
+                          <Link
+                            href={`/mis-cotizaciones/${q.id}`}
+                            className="inline-flex text-[#F47920] hover:text-orange-700 font-medium text-xs"
+                            title="Ver detalle"
+                          >
+                            Ver
+                          </Link>
+                          <a
+                            href={`/api/quotes/${q.id}/pdf`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex text-[#1B2A6B] hover:text-[#F47920] transition-colors p-1"
+                            title="Descargar PDF"
+                          >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                          </a>
+                        </div>
                       </td>
                     </tr>
                   )
@@ -181,7 +194,11 @@ export default function MisCotizacionesPage() {
             {quotes.map((q) => {
               const statusInfo = STATUS_LABELS[q.status] || STATUS_LABELS.DRAFT
               return (
-                <div key={q.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                <Link
+                  key={q.id}
+                  href={`/mis-cotizaciones/${q.id}`}
+                  className="block bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:border-[#F47920]/40 hover:shadow-md transition-all"
+                >
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-semibold text-[#1B2A6B] text-sm">{q.number}</span>
                     <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${statusInfo.color}`}>
@@ -202,7 +219,7 @@ export default function MisCotizacionesPage() {
                       US$ {q.totalCostUSD.toLocaleString('es-CL', { minimumFractionDigits: 2 })}
                     </span>
                   </div>
-                </div>
+                </Link>
               )
             })}
           </div>
