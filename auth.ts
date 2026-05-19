@@ -86,7 +86,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
 
       // Protected client routes (all authenticated users)
-      const protectedPaths = ['/mi-cuenta', '/cotizar', '/mis-cotizaciones']
+      const protectedPaths = ['/mi-cuenta', '/cotizar', '/mis-cotizaciones', '/box']
       const isProtected = protectedPaths.some((p) => pathname.startsWith(p))
       if (isProtected && !isLoggedIn) return false
 

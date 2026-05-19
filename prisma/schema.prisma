@@ -62,12 +62,20 @@ model User {
   resetExpires  DateTime?
   companyId     String?
   companyRef    Company?  @relation(fields: [companyId], references: [id])
+  // IMC Box fields
+  casillaNumber    String?  @unique
+  legacyBoxCode    String?  @unique
+  boxClientActive  Boolean  @default(false)
+  boxNotes         String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
   quotes                Quote[]
   executiveAssignments  ClientAssignment[] @relation("ExecutiveAssignments")
   clientAssignments     ClientAssignment[] @relation("ClientAssignments")
+  packages              Package[]
+  preAlerts             PreAlert[]
+  amazonRequests        AmazonRequest[]
 
   @@map("users")
 }
@@ -283,4 +291,203 @@ model SiteConfig {
   updatedAt DateTime @updatedAt
 
   @@map("site_config")
+}
+
+// ===== IMC BOX MODELS =====
+
+model PackageType {
+  id              String  @id @default(cuid())
+  name            String  @unique
+  slug            String  @unique
+  description     String?
+  daiRate         Float   @default(0.06)
+  ivaRate         Float   @default(0.19)
+  requiresPermit  Boolean @default(false)
+  permitAuthority String?
+  active          Boolean @default(true)
+  createdAt       DateTime @default(now())
+
+  packages  Package[]
+  preAlerts PreAlert[]
+
+  @@map("package_types")
+}
+
+model PreAlert {
+  id              String   @id @default(cuid())
+  code            String   @unique
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  store           String?
+  tracking        String?
+  description     String
+  valueUSD        Float
+  estimatedWeight Float?
+  packageTypeId   String?
+  packageType     PackageType? @relation(fields: [packageTypeId], references: [id])
+  invoiceUrl      String?
+  status          String   @default("PENDING")
+  // PENDING | RECEIVED | DISCREPANCY | CANCELLED
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@map("pre_alerts")
+}
+
+model Package {
+  id              String   @id @default(cuid())
+  code            String   @unique
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  preAlertId      String?
+  description     String
+  tracking        String?
+  whr             String?
+  costUSD         Float?
+  weightLbs       Float?
+  weightKg        Float?
+  lengthCm        Float?
+  widthCm         Float?
+  heightCm        Float?
+  volumetricKg    Float?
+  billableKg      Float?
+  packageTypeId   String?
+  packageType     PackageType? @relation(fields: [packageTypeId], references: [id])
+  photoUrls       Json     @default("[]")
+  status          String   @default("RECEIVED_MIAMI")
+  // RECEIVED_MIAMI | IN_SHIPMENT | IN_TRANSIT | IN_CUSTOMS | CLEARED | OUT_FOR_DELIVERY | DELIVERED
+  shipmentId      String?
+  shipment        BoxShipment? @relation(fields: [shipmentId], references: [id])
+  notes           String?
+  isUsed          Boolean  @default(false)
+  isAmazon        Boolean  @default(false)
+  buyByMeRequest  Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  events PackageEvent[]
+  amazonRequests AmazonRequest[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([shipmentId])
+  @@map("packages")
+}
+
+model BoxShipment {
+  id            String   @id @default(cuid())
+  code          String   @unique
+  type          String   @default("AIR")
+  status        String   @default("DRAFT")
+  // DRAFT | LOADING | IN_TRANSIT | IN_CUSTOMS | CLEARED | DELIVERED | CLOSED
+  departureDate DateTime?
+  arrivalDate   DateTime?
+  originPort    String   @default("KMIA")
+  destPort      String   @default("SCL")
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  packages Package[]
+
+  @@map("box_shipments")
+}
+
+model BoxRate {
+  id             String  @id @default(cuid())
+  minKg          Float
+  maxKg          Float?
+  ratePerKg      Float
+  minimumCharge  Float?
+  shipmentType   String  @default("AIR")
+  isAmazon       Boolean @default(false)
+  isUsed         Boolean @default(false)
+  active         Boolean @default(true)
+  createdAt      DateTime @default(now())
+
+  @@map("box_rates")
+}
+
+model BoxFactor {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       Float
+  description String?
+  active      Boolean  @default(true)
+  updatedAt   DateTime @updatedAt
+
+  @@map("box_factors")
+}
+
+model AmazonRequest {
+  id             String  @id @default(cuid())
+  code           String  @unique
+  userId         String
+  user           User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productUrl     String?
+  description    String
+  valueUSD       Float
+  quantity       Int     @default(1)
+  marginPercent  Float   @default(0.10)
+  tracking       String?
+  status         String  @default("REQUESTED")
+  // REQUESTED | APPROVED | PURCHASED | RECEIVED_MIAMI | IN_SHIPMENT | DELIVERED | REJECTED
+  packageId      String?
+  package        Package? @relation(fields: [packageId], references: [id])
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@map("amazon_requests")
+}
+
+model PackageEvent {
+  id          String   @id @default(cuid())
+  packageId   String
+  package     Package  @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  status      String
+  description String?
+  location    String?
+  userId      String?
+  createdAt   DateTime @default(now())
+
+  @@index([packageId])
+  @@map("package_events")
+}
+
+model ContactMessage {
+  id         String   @id @default(cuid())
+  source     String
+  // IMCBOX | IMCCARGO | IMPORTADORA
+  name       String
+  email      String
+  phone      String?
+  subject    String?
+  message    String
+  status     String   @default("NEW")
+  assignedTo String?
+  createdAt  DateTime @default(now())
+
+  @@index([status])
+  @@map("contact_messages")
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  action     String
+  entityType String?
+  entityId   String?
+  metadata   Json?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@map("audit_logs")
 }
