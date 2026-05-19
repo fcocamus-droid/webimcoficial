@@ -57,7 +57,7 @@ export default function CalculadoraClient({ rates, factors, types }: Props) {
       (r.maxKg == null || billableKg <= r.maxKg)
     )
     const rate = applicable[0]
-    if (!rate) return { error: 'No hay tarifa para este peso' }
+    if (!rate) return { error: 'No hay tarifa para este peso' } as const
 
     let freight = billableKg * rate.ratePerKg
     if (rate.minimumCharge && freight < rate.minimumCharge) freight = rate.minimumCharge
@@ -205,10 +205,10 @@ export default function CalculadoraClient({ rates, factors, types }: Props) {
         <div className="bg-gradient-to-br from-[#1B2A6B] to-[#2D3F8E] rounded-2xl shadow-xl p-6 text-white sticky top-20">
           <h2 className="text-lg font-semibold mb-4">Cotización estimada</h2>
 
-          {!calc || calc.error ? (
+          {!calc || 'error' in calc ? (
             <div className="py-8 text-center">
               <div className="text-4xl mb-2">📦</div>
-              <p className="text-blue-100 text-sm">{calc?.error || 'Ingresa valor y peso para calcular'}</p>
+              <p className="text-blue-100 text-sm">{(calc && 'error' in calc && calc.error) || 'Ingresa valor y peso para calcular'}</p>
             </div>
           ) : (
             <div className="space-y-3">
