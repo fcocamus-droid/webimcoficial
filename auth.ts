@@ -64,28 +64,44 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async authorized({ auth, request }) {
       const { pathname } = request.nextUrl
       const isLoggedIn = !!auth?.user
+      const role = (auth?.user as any)?.role as 'CLIENT' | 'EXECUTIVE' | 'SUPERADMIN' | undefined
 
-      const role = (auth?.user as any)?.role
+      // Permission matrix per route prefix
+      // Each entry: { prefix, allowedRoles, exact? }
+      const rules: Array<{ prefix: string; allowedRoles: Array<'CLIENT' | 'EXECUTIVE' | 'SUPERADMIN'>; exact?: boolean }> = [
+        // SUPERADMIN-only routes
+        { prefix: '/admin/usuarios', allowedRoles: ['SUPERADMIN'] },
+        { prefix: '/admin/tarifas', allowedRoles: ['SUPERADMIN'] },
+        { prefix: '/admin/surcharges', allowedRoles: ['SUPERADMIN'] },
+        { prefix: '/admin/puertos', allowedRoles: ['SUPERADMIN'] },
+        { prefix: '/admin/configuracion', allowedRoles: ['SUPERADMIN'] },
+        { prefix: '/admin/box/embarques', allowedRoles: ['SUPERADMIN'] },
+        // SUPERADMIN + EXECUTIVE
+        { prefix: '/admin/cotizaciones', allowedRoles: ['SUPERADMIN', 'EXECUTIVE'] },
+        { prefix: '/admin/operaciones', allowedRoles: ['SUPERADMIN', 'EXECUTIVE'] },
+        { prefix: '/admin/empresas', allowedRoles: ['SUPERADMIN', 'EXECUTIVE'] },
+        { prefix: '/admin/box/paquetes', allowedRoles: ['SUPERADMIN', 'EXECUTIVE'] },
+        { prefix: '/admin/box/prealertas', allowedRoles: ['SUPERADMIN', 'EXECUTIVE'] },
+        // /admin root (Centro de Control) — SUPERADMIN only
+        { prefix: '/admin', allowedRoles: ['SUPERADMIN'], exact: true },
+        // /ejecutivo — EXECUTIVE only (legacy panel)
+        { prefix: '/ejecutivo', allowedRoles: ['EXECUTIVE', 'SUPERADMIN'] },
+      ]
 
-      // Admin routes require SUPERADMIN role
-      if (pathname.startsWith('/admin')) {
+      // Find matching rule (longest prefix wins; exact match takes precedence)
+      const matched = rules
+        .filter((r) => (r.exact ? pathname === r.prefix : pathname.startsWith(r.prefix)))
+        .sort((a, b) => b.prefix.length - a.prefix.length)[0]
+
+      if (matched) {
         if (!isLoggedIn) return false
-        if (role !== 'SUPERADMIN') {
+        if (!role || !matched.allowedRoles.includes(role)) {
           return Response.redirect(new URL('/no-autorizado', request.url))
         }
         return true
       }
 
-      // Executive routes require EXECUTIVE role
-      if (pathname.startsWith('/ejecutivo')) {
-        if (!isLoggedIn) return false
-        if (role !== 'EXECUTIVE') {
-          return Response.redirect(new URL('/no-autorizado', request.url))
-        }
-        return true
-      }
-
-      // Protected client routes (all authenticated users)
+      // Authenticated routes (any role)
       const protectedPaths = ['/mi-cuenta', '/cotizar', '/mis-cotizaciones', '/box', '/dashboard', '/operaciones']
       const isProtected = protectedPaths.some((p) => pathname.startsWith(p))
       if (isProtected && !isLoggedIn) return false

@@ -45,7 +45,7 @@ const navSections: Section[] = [
   {
     title: 'Administración',
     items: [
-      { href: '/admin', label: 'Centro de Control', icon: 'M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6z M13.5 10.5H21A7.5 7.5 0 0013.5 3v7.5z', roles: ['SUPERADMIN', 'EXECUTIVE'] },
+      { href: '/admin', label: 'Centro de Control', icon: 'M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6z M13.5 10.5H21A7.5 7.5 0 0013.5 3v7.5z', roles: ['SUPERADMIN'] },
       { href: '/admin/cotizaciones', label: 'Todas las cotizaciones', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', roles: ['SUPERADMIN', 'EXECUTIVE'] },
       { href: '/admin/operaciones', label: 'Todas las operaciones', icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4', roles: ['SUPERADMIN', 'EXECUTIVE'] },
       { href: '/admin/empresas', label: 'Empresas', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4', roles: ['SUPERADMIN', 'EXECUTIVE'] },
@@ -56,7 +56,7 @@ const navSections: Section[] = [
     items: [
       { href: '/admin/box/paquetes', label: 'Paquetes Miami', icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4', roles: ['SUPERADMIN', 'EXECUTIVE'] },
       { href: '/admin/box/prealertas', label: 'Pre-alertas (admin)', icon: 'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9', roles: ['SUPERADMIN', 'EXECUTIVE'] },
-      { href: '/admin/box/embarques', label: 'Embarques', icon: 'M3 13l4-8h10l4 8M3 13v6a2 2 0 002 2h14a2 2 0 002-2v-6M3 13h18', roles: ['SUPERADMIN', 'EXECUTIVE'] },
+      { href: '/admin/box/embarques', label: 'Embarques', icon: 'M3 13l4-8h10l4 8M3 13v6a2 2 0 002 2h14a2 2 0 002-2v-6M3 13h18', roles: ['SUPERADMIN'] },
     ],
   },
   {
@@ -95,8 +95,13 @@ function PanelInner({ children }: { children: React.ReactNode }) {
 
   const roleLabel = userRole === 'SUPERADMIN' ? 'Admin' : userRole === 'EXECUTIVE' ? 'Ejecutivo' : 'Cliente'
 
-  // All roles see the same panel (permissions to be applied later per user request)
+  // Filter sections/items by user role (matrix approved by user)
   const visibleSections = navSections
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) => !item.roles || item.roles.includes(userRole)),
+    }))
+    .filter((section) => section.items.length > 0)
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50">
