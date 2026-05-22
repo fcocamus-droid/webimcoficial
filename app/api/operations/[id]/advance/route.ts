@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
+import { sendEmail } from '@/lib/email/send'
+import { operationStageEmail } from '@/lib/email/templates'
 
 export const dynamic = 'force-dynamic'
 
@@ -61,6 +63,32 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         now()
       )
     `
+
+    // Send notification email to client (best-effort, non-blocking)
+    if (newStage !== currentStage) {
+      try {
+        const opInfo = await prisma.$queryRaw<Array<{ code: string; quoteNumber: string; userName: string | null; userEmail: string }>>`
+          SELECT o.code, q.number AS "quoteNumber", u.name AS "userName", u.email AS "userEmail"
+          FROM operations o
+          JOIN quotes q ON o."quoteId" = q.id
+          JOIN users u ON o."userId" = u.id
+          WHERE o.id = ${params.id}
+          LIMIT 1
+        `
+        if (opInfo[0]?.userEmail) {
+          const tpl = operationStageEmail({
+            clientName: opInfo[0].userName,
+            operationCode: opInfo[0].code,
+            quoteNumber: opInfo[0].quoteNumber,
+            newStage,
+            description,
+          })
+          await sendEmail({ to: opInfo[0].userEmail, subject: tpl.subject, html: tpl.html, text: tpl.text })
+        }
+      } catch (err) {
+        console.error('Stage notification email failed:', err)
+      }
+    }
 
     return NextResponse.json({ ok: true, newStage })
   } catch (e: any) {

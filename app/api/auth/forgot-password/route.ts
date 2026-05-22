@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
+import { sendEmail } from "@/lib/email/send";
+import { resetPasswordEmail } from "@/lib/email/templates";
 
 export async function POST(req: Request) {
   try {
@@ -17,34 +19,21 @@ export async function POST(req: Request) {
 
     if (user) {
       const resetToken = crypto.randomUUID();
-      const resetExpires = new Date(Date.now() + 3600000); // 1 hour
+      const resetExpires = new Date(Date.now() + 86400000); // 24 hours
 
       await prisma.user.update({
         where: { id: user.id },
         data: { resetToken, resetExpires },
       });
 
-      const resetUrl = `${process.env.NEXTAUTH_URL}/reset-password?token=${resetToken}`;
+      const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://webimcoficial.vercel.app';
+      const resetUrl = `${baseUrl}/reset-password?token=${resetToken}`;
 
-      if (process.env.RESEND_API_KEY) {
-        const { Resend } = await import("resend");
-        const resend = new Resend(process.env.RESEND_API_KEY);
+      const tpl = resetPasswordEmail({ name: user.name, resetUrl });
+      const result = await sendEmail({ to: email, subject: tpl.subject, html: tpl.html, text: tpl.text });
 
-        await resend.emails.send({
-          from: process.env.EMAIL_FROM || "IMC Cargo <noreply@imccargo.cl>",
-          to: email,
-          subject: "Restablecer contraseña - IMC Cargo",
-          html: `
-            <h2>Restablecer contraseña</h2>
-            <p>Hola ${user.name},</p>
-            <p>Haz clic en el siguiente enlace para restablecer tu contraseña:</p>
-            <a href="${resetUrl}" style="display:inline-block;padding:12px 24px;background:#1B2A6B;color:white;text-decoration:none;border-radius:8px;">Restablecer contraseña</a>
-            <p>Este enlace expira en 1 hora.</p>
-            <p>Si no solicitaste esto, ignora este correo.</p>
-          `,
-        });
-      } else {
-        console.log(`[DEV] Reset URL for ${email}: ${resetUrl}`);
+      if (!result.sent) {
+        console.log(`[FORGOT-PASSWORD · ${result.mode}] for ${email}: ${resetUrl}`);
       }
     }
 
