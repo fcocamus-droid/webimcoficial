@@ -1,5 +1,5 @@
-// prisma/schema.prisma
-// Clean slate — no models yet. Ready for new business.
+// IMC Industriales — Marketplace B2B
+// Schema minimal — extender con products, RFQs, etc.
 
 generator client {
   provider = "prisma-client-js"
@@ -9,4 +9,27 @@ datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
+}
+
+enum UserRole {
+  ADMIN     // operations team
+  SELLER    // fabricantes / importadores
+  BUYER     // compradores empresariales
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String?
+  name          String?
+  phone         String?
+  role          UserRole  @default(BUYER)
+  emailVerified DateTime?
+  verifyToken   String?
+  resetToken    String?
+  resetExpires  DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("users")
 }
