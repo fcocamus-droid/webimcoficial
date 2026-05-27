@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 
 type Category = { slug: string; name: string; icon: string }
 
-export default function ImportProductForm({ categories }: { categories: Category[] }) {
+export default function ImportProductForm({ categories, usdToClpRate }: { categories: Category[]; usdToClpRate: number }) {
   const router = useRouter()
   const [url, setUrl] = useState('')
   const [categorySlug, setCategorySlug] = useState('otros')
@@ -118,7 +118,11 @@ export default function ImportProductForm({ categories }: { categories: Category
         </div>
 
         <div className="flex items-center justify-between gap-3 pt-1">
-          <p className="text-[10px] text-slate-400">Precio final = (USD producto + USD shipping) × margen × tipo cambio</p>
+          <p className="text-[10px] text-slate-400">
+            Precio final = (USD producto + USD shipping) × margen × {' '}
+            <span className="font-semibold text-[#F47920]">${usdToClpRate.toLocaleString('es-CL', { maximumFractionDigits: 2 })} CLP/USD</span>
+            <span className="text-slate-300 ml-1">(tipo cambio diario)</span>
+          </p>
           <button
             type="submit"
             disabled={loading || !url.trim()}

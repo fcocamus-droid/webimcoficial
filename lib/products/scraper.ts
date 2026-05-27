@@ -99,24 +99,39 @@ function scrapeAmazon(html: string, url: string): Partial<ScrapedProduct> {
   const data: Partial<ScrapedProduct> = { marketplace: 'amazon', sourceUrl: url, imageUrls: [], specs: {} }
   const raw: Record<string, any> = {}
 
-  // Title
-  let title = extractOpenGraph(html, 'title') || ''
+  // ----- TITLE -----
+  let title = ''
   const titleMatch = html.match(/<span[^>]*id="productTitle"[^>]*>([\s\S]*?)<\/span>/i)
   if (titleMatch) title = decodeEntities(titleMatch[1].trim())
+  if (!title) title = extractOpenGraph(html, 'title') || ''
   data.title = title
 
-  // Description
+  // ----- DESCRIPTION -----
   data.description = extractMetaName(html, 'description') || extractOpenGraph(html, 'description') || ''
 
-  // Image (og:image)
+  // ----- IMAGES -----
+  // 1) og:image (always present)
   const ogImage = extractOpenGraph(html, 'image')
   if (ogImage) data.imageUrls!.push(ogImage)
 
-  // Additional images from imageBlock data
+  // 2) landingImage with data-a-dynamic-image (modern Amazon main image carousel)
+  const dynImgMatches = html.matchAll(/data-a-dynamic-image=["']\{([^"']+)["']/gi)
+  for (const m of dynImgMatches) {
+    try {
+      // The attribute value is JSON-like: {"https://..jpg":[width,height], ...}
+      const decoded = m[1].replace(/&quot;/g, '"').replace(/&#34;/g, '"')
+      const json = '{' + decoded + '}'
+      const obj = JSON.parse(json)
+      for (const imgUrl of Object.keys(obj)) {
+        if (!data.imageUrls!.includes(imgUrl)) data.imageUrls!.push(imgUrl)
+      }
+    } catch {}
+  }
+
+  // 3) imageBlock JSON ('colorImages' variant)
   const imgScriptMatch = html.match(/'colorImages':\s*\{\s*'initial':\s*(\[[\s\S]*?\])\s*\}/)
   if (imgScriptMatch) {
     try {
-      // Convert JS object syntax to JSON-ish
       const jsLike = imgScriptMatch[1].replace(/'/g, '"')
       const arr = JSON.parse(jsLike)
       arr.forEach((img: any) => {
@@ -126,31 +141,63 @@ function scrapeAmazon(html: string, url: string): Partial<ScrapedProduct> {
     } catch {}
   }
 
-  // Price - try multiple selectors
-  const priceMatches = [
-    html.match(/"priceToPay"[^"]*"[\s\S]*?"amount":\s*"?([\d.]+)/i),
-    html.match(/<span[^>]+class="a-price-whole"[^>]*>([\d,]+)\s*<\/span>/),
-    html.match(/<span[^>]+id="priceblock_ourprice"[^>]*>\s*\$?([\d,]+\.?\d*)/),
-    html.match(/<span[^>]+class="a-offscreen"[^>]*>\s*\$([\d,]+\.?\d*)/),
+  // 4) landingImage element src as fallback
+  if (data.imageUrls!.length === 0) {
+    const landingImg = html.match(/id="landingImage"[^>]*\s+src="([^"]+)"/i)
+    if (landingImg) data.imageUrls!.push(landingImg[1])
+  }
+
+  // 5) Final fallback: any *.media-amazon.com image inside main #imageBlock area
+  if (data.imageUrls!.length === 0) {
+    const re = /https?:\/\/[a-z0-9.-]*media-amazon\.com\/images\/I\/[\w-]+\._[A-Z0-9_]+_\.(?:jpg|png|jpeg)/gi
+    const all = html.match(re) || []
+    all.slice(0, 4).forEach((u) => { if (!data.imageUrls!.includes(u)) data.imageUrls!.push(u) })
+  }
+
+  // ----- PRICE -----
+  const priceCandidates: Array<{ pattern: RegExp; label: string }> = [
+    // 1) Modern accessibility a-offscreen (most reliable)
+    { pattern: /<span[^>]+class="[^"]*a-offscreen[^"]*"[^>]*>\s*\$\s*([\d,]+\.?\d*)\s*</i, label: 'a-offscreen' },
+    // 2) Apex price display data
+    { pattern: /"displayPrice"\s*:\s*"\$\s*([\d,]+\.?\d*)"/i, label: 'displayPrice' },
+    // 3) priceToPay JSON-LD
+    { pattern: /"priceToPay"[^"]*"[\s\S]*?"amount":\s*"?([\d.]+)"?/i, label: 'priceToPay' },
+    // 4) a-price-whole + fraction (legacy)
+    { pattern: /<span[^>]+class="a-price-whole"[^>]*>([\d,]+)/i, label: 'a-price-whole' },
+    // 5) Hidden priceblock_ourprice (old)
+    { pattern: /<span[^>]+id="priceblock_ourprice"[^>]*>\s*\$?([\d,]+\.?\d*)/i, label: 'priceblock_ourprice' },
+    // 6) Apex desktop block
+    { pattern: /<span[^>]+id="apex_desktop"[^>]*>[\s\S]*?\$\s*([\d,]+\.?\d*)/i, label: 'apex_desktop' },
+    // 7) Buybox saving JSON
+    { pattern: /"buyingOptionType"[\s\S]{0,300}?"price"[\s\S]{0,100}?"amount":\s*([\d.]+)/i, label: 'buyingOption' },
+    // 8) Open Graph price (rare on Amazon but try)
+    { pattern: /<meta[^>]+property="og:price:amount"[^>]+content="([\d.]+)"/i, label: 'og:price' },
+    // 9) JSON-LD Product offers
+    { pattern: /"@type"\s*:\s*"Product"[\s\S]*?"price"\s*:\s*"?([\d.]+)/i, label: 'json-ld' },
   ]
-  for (const m of priceMatches) {
+
+  raw.priceDebug = []
+  for (const { pattern, label } of priceCandidates) {
+    const m = html.match(pattern)
     if (m) {
       const num = parseFloat(m[1].replace(/,/g, ''))
-      if (num > 0 && num < 1_000_000) {
+      raw.priceDebug.push({ label, raw: m[1], parsed: num })
+      if (num > 0 && num < 1_000_000 && !data.priceUSD) {
         data.priceUSD = num
-        break
       }
     }
   }
 
-  // Brand
+  // ----- BRAND -----
   const brandMatch = html.match(/<a[^>]+id="bylineInfo"[^>]*>([^<]+)<\/a>/i)
-  if (brandMatch) data.brand = decodeEntities(brandMatch[1].trim()).replace(/^(Visit the |Brand: )/, '').replace(/ Store$/, '')
+  if (brandMatch) {
+    data.brand = decodeEntities(brandMatch[1].trim())
+      .replace(/^(Visit the |Brand: )/, '')
+      .replace(/ Store$/, '')
+  }
 
-  // Source ID
   data.sourceId = extractAmazonId(url) || ''
-
-  raw.priceMatches = priceMatches.map((m) => (m ? m[1] : null))
+  raw.imageCount = data.imageUrls!.length
   data.raw = raw
 
   return data
@@ -267,6 +314,9 @@ export async function scrapeProductUrl(url: string): Promise<ScrapedProduct> {
 /**
  * Calculates final CLP price from USD product price.
  * Formula: (price + shipping) * margin_factor * usd_to_clp_rate
+ *
+ * Note: usdToClpRate is now obtained dynamically — see lib/exchange-rate.ts
+ * Use that and pass the value here.
  */
 export function calculateCLPPrice(opts: {
   priceUSD: number

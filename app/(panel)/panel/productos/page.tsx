@@ -2,8 +2,10 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
+import { getUsdToClpRate } from '@/lib/exchange-rate'
 import PageHeader from '../../_components/PageHeader'
 import ImportProductForm from './ImportProductForm'
+import RateBadge from './RateBadge'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,6 +14,8 @@ export default async function AdminProductosPage() {
   if (!session?.user?.id) redirect('/login?callbackUrl=/panel/productos')
   const role = (session.user as any).role
   if (role !== 'SUPERADMIN' && role !== 'EXECUTIVE') redirect('/no-autorizado')
+
+  const usdToClpRate = await getUsdToClpRate()
 
   const products = await prisma.$queryRaw<Array<any>>`
     SELECT p.id, p.slug, p.title, p.source_marketplace AS marketplace,
@@ -38,7 +42,10 @@ export default async function AdminProductosPage() {
 
   return (
     <>
-      <PageHeader title="Productos" breadcrumb={[{ label: 'Productos' }]} />
+      <div className="flex items-start justify-between mb-6">
+        <PageHeader title="Productos" breadcrumb={[{ label: 'Productos' }]} />
+        <RateBadge initialRate={usdToClpRate} />
+      </div>
 
       {/* KPI cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
@@ -50,7 +57,7 @@ export default async function AdminProductosPage() {
 
       {/* Importar form */}
       <div className="mb-6">
-        <ImportProductForm categories={categories} />
+        <ImportProductForm categories={categories} usdToClpRate={usdToClpRate} />
       </div>
 
       {/* Products table */}

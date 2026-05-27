@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { scrapeProductUrl, calculateCLPPrice, slugify } from '@/lib/products/scraper'
+import { getUsdToClpRate } from '@/lib/exchange-rate'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 30  // allow longer scraping
@@ -58,11 +59,17 @@ export async function POST(req: Request) {
       categoryId = cat[0]?.id || null
     }
 
-    // Pricing
+    // Pricing — use live USD/CLP rate from mindicador.cl (cached daily)
     const finalMargin = marginFactor || 1.30
     const finalShipping = shippingUSD || 0
+    const usdToClpRate = await getUsdToClpRate()
     const priceCLP = scraped.priceUSD
-      ? calculateCLPPrice({ priceUSD: scraped.priceUSD, shippingUSD: finalShipping, marginFactor: finalMargin })
+      ? calculateCLPPrice({
+          priceUSD: scraped.priceUSD,
+          shippingUSD: finalShipping,
+          marginFactor: finalMargin,
+          usdToClpRate,
+        })
       : null
 
     // Slug (ensure unique)
