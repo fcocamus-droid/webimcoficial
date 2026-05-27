@@ -8,8 +8,14 @@ export default function ComoFuncionaPage() {
   return (
     <>
       <Header />
-      <section className="bg-navy-gradient text-white py-14">
-        <div className="container-base text-center">
+      <section className="bg-navy-700 text-white py-14 relative overflow-hidden">
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: 'url(/img/hero-warehouse.png)' }}
+          aria-hidden="true"
+        />
+        <div className="absolute inset-0 bg-gradient-to-br from-navy-700/95 via-navy-600/90 to-navy-800/95" aria-hidden="true" />
+        <div className="container-base text-center relative">
           <h1 className="text-4xl md:text-5xl font-bold mb-3">Cómo funciona IMC Industriales</h1>
           <p className="text-blue-100 text-lg max-w-2xl mx-auto">
             Conectamos directamente a quien fabrica/importa con quien compra. Sin intermediarios.

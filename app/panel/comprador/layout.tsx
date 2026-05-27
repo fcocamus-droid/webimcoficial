@@ -44,7 +44,7 @@ export default async function CompradorLayout({
           </div>
         </div>
 
-        <div className="bg-white border-b border-slate-200 sticky top-16 z-30">
+        <div className="bg-white border-b border-slate-200 sticky top-20 z-30">
           <div className="container-base flex gap-1 overflow-x-auto">
             {tabs.map((t) => (
               <Link

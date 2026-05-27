@@ -11,30 +11,51 @@ interface Props {
 }
 
 const SIZES = {
-  sm: { h: 30 },
-  md: { h: 40 },
-  lg: { h: 56 },
-  xl: { h: 80 },
+  sm: { h: 32 },
+  md: { h: 48 },
+  lg: { h: 64 },
+  xl: { h: 88 },
 }
 
-export default function Logo({ size = 'md', variant = 'default', showTagline = false, className = '' }: Props) {
+export default function Logo({
+  size = 'md',
+  variant = 'default',
+  showTagline = false,
+  className = '',
+}: Props) {
   const h = SIZES[size].h
   const navy = variant === 'mono-white' ? '#FFFFFF' : '#1B2A6B'
-  const amber = variant === 'mono-white' ? '#FFFFFF' : variant === 'mono-navy' ? '#1B2A6B' : '#F59E0B'
-  const tagline = variant === 'mono-white' ? 'rgba(255,255,255,0.7)' : '#64748B'
+  const amber =
+    variant === 'mono-white'
+      ? '#FFFFFF'
+      : variant === 'mono-navy'
+        ? '#1B2A6B'
+        : '#F59E0B'
+  const tagline =
+    variant === 'mono-white' ? 'rgba(255,255,255,0.75)' : '#64748B'
+
+  // Si hay tagline, el SVG necesita más altura
+  const viewBox = showTagline ? '0 0 320 86' : '0 0 280 70'
 
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 280 70"
+      viewBox={viewBox}
       height={h}
       className={className}
-      aria-label="IMC Industriales"
+      aria-label="IMC Industriales · Insumos, Materiales y Componentes Industriales"
     >
       {/* Geometric isotype: layered industrial brackets */}
       <g>
         {/* Outer ring */}
-        <circle cx="30" cy="35" r="22" fill="none" stroke={navy} strokeWidth="2.5" />
+        <circle
+          cx="30"
+          cy="35"
+          r="22"
+          fill="none"
+          stroke={navy}
+          strokeWidth="2.5"
+        />
         {/* Inner geometric "I" / industrial brackets */}
         <rect x="24" y="20" width="3.5" height="30" fill={navy} />
         <rect x="32.5" y="20" width="3.5" height="30" fill={amber} />
@@ -70,14 +91,14 @@ export default function Logo({ size = 'md', variant = 'default', showTagline = f
         {showTagline && (
           <text
             x="62"
-            y="52"
+            y="58"
             fontFamily="'Inter', system-ui, sans-serif"
-            fontSize="9"
+            fontSize="8.5"
             fontWeight="600"
-            letterSpacing="2"
+            letterSpacing="1.4"
             fill={tagline}
           >
-            MARKETPLACE B2B · CHILE
+            INSUMOS · MATERIALES · COMPONENTES INDUSTRIALES
           </text>
         )}
       </g>

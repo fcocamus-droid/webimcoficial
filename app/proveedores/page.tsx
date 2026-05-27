@@ -69,8 +69,14 @@ export default async function ProveedoresIndex({
     <>
       <Header />
       <main>
-        <section className="bg-navy-gradient text-white py-12">
-          <div className="container-base">
+        <section className="bg-navy-700 text-white py-12 relative overflow-hidden">
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: 'url(/img/hero-warehouse.png)' }}
+            aria-hidden="true"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-navy-700/95 via-navy-600/90 to-navy-800/95" aria-hidden="true" />
+          <div className="container-base relative">
             <h1 className="text-4xl md:text-5xl font-bold mb-3">
               Proveedores industriales
             </h1>

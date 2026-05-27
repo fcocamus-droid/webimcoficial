@@ -7,9 +7,10 @@ export default function Footer() {
       <div className="container-base py-12">
         <div className="grid md:grid-cols-4 gap-8 mb-8">
           <div className="md:col-span-1">
-            <Logo size="md" variant="mono-white" />
+            <Logo size="lg" variant="mono-white" showTagline />
             <p className="text-sm text-blue-200 mt-4 leading-relaxed">
-              El marketplace B2B industrial de Chile. Conectamos fabricantes e importadores con compradores empresariales.
+              El marketplace B2B industrial de Chile. Conectamos fabricantes e
+              importadores con compradores empresariales.
             </p>
           </div>
           <div>

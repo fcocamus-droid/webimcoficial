@@ -32,8 +32,16 @@ export default async function Home() {
       <Header />
 
       {/* HERO */}
-      <section className="bg-navy-gradient text-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(245,158,11,0.15),transparent_50%)] pointer-events-none" />
+      <section className="bg-navy-700 text-white relative overflow-hidden">
+        {/* Foto warehouse industrial como fondo */}
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: 'url(/img/hero-warehouse.png)' }}
+          aria-hidden="true"
+        />
+        {/* Overlay navy oscuro semi-transparente con tinte amber */}
+        <div className="absolute inset-0 bg-gradient-to-br from-navy-700/95 via-navy-600/88 to-navy-800/95" aria-hidden="true" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(245,158,11,0.18),transparent_55%)] pointer-events-none" />
         <div className="absolute top-10 right-10 w-72 h-72 bg-amber-500/10 blur-3xl rounded-full pointer-events-none" />
 
         <div className="container-base relative py-16 lg:py-24">
