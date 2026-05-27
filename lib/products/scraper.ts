@@ -115,7 +115,7 @@ function scrapeAmazon(html: string, url: string): Partial<ScrapedProduct> {
   if (ogImage) data.imageUrls!.push(ogImage)
 
   // 2) landingImage with data-a-dynamic-image (modern Amazon main image carousel)
-  const dynImgMatches = html.matchAll(/data-a-dynamic-image=["']\{([^"']+)["']/gi)
+  const dynImgMatches = Array.from(html.matchAll(/data-a-dynamic-image=["']\{([^"']+)["']/gi))
   for (const m of dynImgMatches) {
     try {
       // The attribute value is JSON-like: {"https://..jpg":[width,height], ...}
