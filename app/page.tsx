@@ -39,8 +39,11 @@ export default async function Home() {
           style={{ backgroundImage: 'url(/img/hero-warehouse.png)' }}
           aria-hidden="true"
         />
-        {/* Overlay navy oscuro semi-transparente con tinte amber */}
-        <div className="absolute inset-0 bg-gradient-to-br from-navy-700/95 via-navy-600/88 to-navy-800/95" aria-hidden="true" />
+        {/* Overlay horizontal: izquierda oscura para texto, derecha clara para foto */}
+        <div
+          className="absolute inset-0 bg-gradient-to-r from-navy-700/92 via-navy-700/65 to-navy-800/30"
+          aria-hidden="true"
+        />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(245,158,11,0.18),transparent_55%)] pointer-events-none" />
         <div className="absolute top-10 right-10 w-72 h-72 bg-amber-500/10 blur-3xl rounded-full pointer-events-none" />
 

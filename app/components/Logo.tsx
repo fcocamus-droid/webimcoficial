@@ -11,10 +11,10 @@ interface Props {
 }
 
 const SIZES = {
-  sm: { h: 32 },
-  md: { h: 48 },
-  lg: { h: 64 },
-  xl: { h: 88 },
+  sm: { h: 36 },
+  md: { h: 56 },
+  lg: { h: 76 },
+  xl: { h: 100 },
 }
 
 export default function Logo({

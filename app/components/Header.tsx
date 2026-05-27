@@ -51,7 +51,7 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-slate-200">
-      <div className="container-base h-20 flex items-center justify-between">
+      <div className="container-base h-24 flex items-center justify-between">
         <Link href="/" className="flex items-center py-2">
           <Logo size="lg" showTagline />
         </Link>
