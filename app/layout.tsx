@@ -3,14 +3,16 @@ import Providers from "./providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Grupo IMC | Cargo · Box · Importadora",
-  description: "Soluciones logísticas integrales: carga internacional, casilla en Miami y productos importados. Facilitando el comercio global desde Chile.",
-  keywords: "IMC Cargo, IMC Box, Importadora IMC, logística Chile, carga internacional, casilla Miami, importación",
+  title: "IMC Industriales · Marketplace B2B Chile",
+  description:
+    "Conectamos fabricantes e importadores chilenos con compradores empresariales. Químicos, cosmética, limpieza, alimentos, suplementos y packaging.",
+  keywords:
+    "B2B Chile, marketplace industrial, fabricantes Chile, importadores Chile, químicos industriales, RFQ, cotización industrial",
   openGraph: {
-    title: "Grupo IMC | Cargo · Box · Importadora",
-    description: "Soluciones logísticas integrales desde Chile al mundo.",
-    url: "https://grupoimc.vercel.app",
-    siteName: "Grupo IMC",
+    title: "IMC Industriales · Marketplace B2B Chile",
+    description:
+      "El marketplace B2B industrial de Chile. Sin intermediarios, conexión directa fabricante–comprador.",
+    siteName: "IMC Industriales",
     locale: "es_CL",
     type: "website",
   },
