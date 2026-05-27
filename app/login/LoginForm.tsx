@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { signIn } from 'next-auth/react'
+import PasswordInput from '@/app/components/PasswordInput'
 
 export default function LoginForm() {
   const router = useRouter()
@@ -73,11 +74,9 @@ export default function LoginForm() {
               ¿Olvidaste tu contraseña?
             </Link>
           </div>
-          <input
-            type="password"
+          <PasswordInput
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="input-base"
             placeholder="Tu contraseña"
             required
             autoComplete="current-password"

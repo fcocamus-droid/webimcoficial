@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { signIn } from 'next-auth/react'
 import { formatRut, cleanRut, isValidRut } from '@/lib/rut'
+import PasswordInput from '@/app/components/PasswordInput'
 
 type Tipo = 'fabricante' | 'comprador'
 
@@ -269,22 +270,20 @@ export default function RegistroForm({ initialTipo }: { initialTipo: Tipo }) {
             </div>
             <div>
               <label className="label-base">Contraseña *</label>
-              <input
-                type="password"
+              <PasswordInput
                 value={form.password}
                 onChange={(e) => update('password', e.target.value)}
-                className="input-base"
                 placeholder="Mínimo 8 caracteres"
+                autoComplete="new-password"
               />
               {errors.password && <p className="error-text">{errors.password}</p>}
             </div>
             <div>
               <label className="label-base">Repite contraseña *</label>
-              <input
-                type="password"
+              <PasswordInput
                 value={form.password2}
                 onChange={(e) => update('password2', e.target.value)}
-                className="input-base"
+                autoComplete="new-password"
               />
               {errors.password2 && <p className="error-text">{errors.password2}</p>}
             </div>

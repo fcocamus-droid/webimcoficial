@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import PasswordInput from '@/app/components/PasswordInput'
 
 export default function ResetPasswordForm({ token }: { token: string }) {
   const router = useRouter()
@@ -70,14 +71,12 @@ export default function ResetPasswordForm({ token }: { token: string }) {
     <form onSubmit={onSubmit} className="space-y-5">
       <div>
         <label className="label-base">Nueva contraseña</label>
-        <input
-          type="password"
+        <PasswordInput
           value={pass}
           onChange={(e) => {
             setPass(e.target.value)
             setErrors((x) => ({ ...x, pass: '' }))
           }}
-          className="input-base"
           placeholder="Mínimo 8 caracteres"
           autoComplete="new-password"
           autoFocus
@@ -87,14 +86,12 @@ export default function ResetPasswordForm({ token }: { token: string }) {
 
       <div>
         <label className="label-base">Repite la nueva contraseña</label>
-        <input
-          type="password"
+        <PasswordInput
           value={pass2}
           onChange={(e) => {
             setPass2(e.target.value)
             setErrors((x) => ({ ...x, pass2: '' }))
           }}
-          className="input-base"
           autoComplete="new-password"
         />
         {errors.pass2 && <p className="error-text">{errors.pass2}</p>}

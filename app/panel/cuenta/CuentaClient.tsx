@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
+import PasswordInput from '@/app/components/PasswordInput'
 
 type Tab = 'perfil' | 'password' | 'seguridad'
 
@@ -349,11 +350,9 @@ function PasswordTab() {
 
       <div>
         <label className="label-base">Contraseña actual</label>
-        <input
-          type="password"
+        <PasswordInput
           value={form.current}
           onChange={(e) => update('current', e.target.value)}
-          className="input-base"
           autoComplete="current-password"
         />
         {errors.current && <p className="error-text">{errors.current}</p>}
@@ -361,11 +360,9 @@ function PasswordTab() {
 
       <div>
         <label className="label-base">Nueva contraseña</label>
-        <input
-          type="password"
+        <PasswordInput
           value={form.next}
           onChange={(e) => update('next', e.target.value)}
-          className="input-base"
           autoComplete="new-password"
         />
         {errors.next && <p className="error-text">{errors.next}</p>}
@@ -373,11 +370,9 @@ function PasswordTab() {
 
       <div>
         <label className="label-base">Repite la nueva contraseña</label>
-        <input
-          type="password"
+        <PasswordInput
           value={form.next2}
           onChange={(e) => update('next2', e.target.value)}
-          className="input-base"
           autoComplete="new-password"
         />
         {errors.next2 && <p className="error-text">{errors.next2}</p>}
