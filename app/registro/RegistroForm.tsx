@@ -5,7 +5,11 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { signIn } from 'next-auth/react'
 import { formatRut, cleanRut, isValidRut } from '@/lib/rut'
+import { isValidClPhone, normalizeClPhone } from '@/lib/phone-cl'
 import PasswordInput from '@/app/components/PasswordInput'
+import PhoneInput from '@/app/components/PhoneInput'
+import RegionComunaSelector from '@/app/components/RegionComunaSelector'
+import GiroSelector from '@/app/components/GiroSelector'
 
 type Tipo = 'fabricante' | 'comprador'
 
@@ -59,7 +63,12 @@ const SECTORES_COMPRADOR = [
   'Farmacéutica / suplementos',
   'Packaging',
   'Construcción',
+  'Minería',
+  'Energía',
+  'Agroindustria',
   'Retail',
+  'Logística',
+  'Servicios',
   'Otro',
 ]
 
@@ -90,8 +99,14 @@ export default function RegistroForm({ initialTipo }: { initialTipo: Tipo }) {
       errs.password = 'Mínimo 8 caracteres'
     if (form.password !== form.password2)
       errs.password2 = 'Las contraseñas no coinciden'
+    if (!form.phone || !isValidClPhone(form.phone))
+      errs.phone = 'Teléfono requerido (9 dígitos)'
     if (!form.razonSocial) errs.razonSocial = 'Razón social requerida'
     if (!form.rut || !isValidRut(form.rut)) errs.rut = 'RUT inválido'
+    if (!form.region) errs.region = 'Selecciona región'
+    if (!form.comuna) errs.comuna = 'Selecciona comuna'
+    if (form.contactPhone && !isValidClPhone(form.contactPhone))
+      errs.contactPhone = 'Teléfono comercial inválido'
     if (!form.acceptTerms) errs.acceptTerms = 'Debes aceptar los términos'
     setErrors(errs)
     return Object.keys(errs).length === 0
@@ -109,14 +124,16 @@ export default function RegistroForm({ initialTipo }: { initialTipo: Tipo }) {
         email: form.email.trim().toLowerCase(),
         password: form.password,
         name: form.name.trim(),
-        phone: form.phone.trim() || undefined,
+        phone: normalizeClPhone(form.phone),
         razonSocial: form.razonSocial.trim(),
         rut: cleanRut(form.rut),
         giro: form.giro.trim() || undefined,
-        contactPhone: form.contactPhone.trim() || undefined,
-        region: form.region.trim() || undefined,
+        contactPhone: form.contactPhone
+          ? normalizeClPhone(form.contactPhone)
+          : undefined,
+        region: form.region,
         ciudad: form.ciudad.trim() || undefined,
-        comuna: form.comuna.trim() || undefined,
+        comuna: form.comuna,
         address: form.address.trim() || undefined,
         acceptTerms: form.acceptTerms,
       }
@@ -175,7 +192,6 @@ export default function RegistroForm({ initialTipo }: { initialTipo: Tipo }) {
   }
 
   const isSeller = tipo === 'fabricante'
-  const accent = isSeller ? 'navy' : 'amber'
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -208,7 +224,7 @@ export default function RegistroForm({ initialTipo }: { initialTipo: Tipo }) {
               <p className="text-xs text-navy-600 font-bold uppercase tracking-wider">
                 Quiero vender
               </p>
-              <p className="font-bold text-slate-900">Soy Fabricante / Importador</p>
+              <p className="font-bold text-slate-900">Soy Fabricante o Importador</p>
             </div>
           </div>
         </button>
@@ -244,7 +260,12 @@ export default function RegistroForm({ initialTipo }: { initialTipo: Tipo }) {
       >
         {/* Section: Acceso */}
         <section>
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">Datos de acceso</h2>
+          <h2 className="text-lg font-semibold text-slate-900 mb-1">
+            Datos de acceso
+          </h2>
+          <p className="text-xs text-slate-500 mb-4">
+            Tu email será tu usuario para iniciar sesión.
+          </p>
           <div className="grid md:grid-cols-2 gap-4">
             <div>
               <label className="label-base">Nombre completo *</label>
@@ -254,6 +275,7 @@ export default function RegistroForm({ initialTipo }: { initialTipo: Tipo }) {
                 onChange={(e) => update('name', e.target.value)}
                 className="input-base"
                 placeholder="Tu nombre"
+                autoComplete="name"
               />
               {errors.name && <p className="error-text">{errors.name}</p>}
             </div>
@@ -265,6 +287,7 @@ export default function RegistroForm({ initialTipo }: { initialTipo: Tipo }) {
                 onChange={(e) => update('email', e.target.value)}
                 className="input-base"
                 placeholder="nombre@empresa.cl"
+                autoComplete="email"
               />
               {errors.email && <p className="error-text">{errors.email}</p>}
             </div>
@@ -276,7 +299,9 @@ export default function RegistroForm({ initialTipo }: { initialTipo: Tipo }) {
                 placeholder="Mínimo 8 caracteres"
                 autoComplete="new-password"
               />
-              {errors.password && <p className="error-text">{errors.password}</p>}
+              {errors.password && (
+                <p className="error-text">{errors.password}</p>
+              )}
             </div>
             <div>
               <label className="label-base">Repite contraseña *</label>
@@ -285,26 +310,35 @@ export default function RegistroForm({ initialTipo }: { initialTipo: Tipo }) {
                 onChange={(e) => update('password2', e.target.value)}
                 autoComplete="new-password"
               />
-              {errors.password2 && <p className="error-text">{errors.password2}</p>}
+              {errors.password2 && (
+                <p className="error-text">{errors.password2}</p>
+              )}
             </div>
-            <div>
-              <label className="label-base">Teléfono</label>
-              <input
-                type="tel"
+            <div className="md:col-span-2">
+              <label className="label-base">Teléfono móvil *</label>
+              <PhoneInput
                 value={form.phone}
-                onChange={(e) => update('phone', e.target.value)}
-                className="input-base"
-                placeholder="+56 9 ..."
+                onChange={(v) => update('phone', v)}
+                placeholder="9 1234 5678"
+                required
               />
+              {errors.phone && <p className="error-text">{errors.phone}</p>}
+              <p className="helper-text">
+                Te contactaremos por aquí solo para temas urgentes de tu cuenta.
+              </p>
             </div>
           </div>
         </section>
 
         {/* Section: Empresa */}
         <section>
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">
+          <h2 className="text-lg font-semibold text-slate-900 mb-1">
             Datos de la empresa
           </h2>
+          <p className="text-xs text-slate-500 mb-4">
+            Información tributaria y comercial. Los datos marcados con * son
+            obligatorios.
+          </p>
           <div className="grid md:grid-cols-2 gap-4">
             <div>
               <label className="label-base">Razón social *</label>
@@ -314,6 +348,7 @@ export default function RegistroForm({ initialTipo }: { initialTipo: Tipo }) {
                 onChange={(e) => update('razonSocial', e.target.value)}
                 className="input-base"
                 placeholder="Mi Empresa SpA"
+                autoComplete="organization"
               />
               {errors.razonSocial && (
                 <p className="error-text">{errors.razonSocial}</p>
@@ -328,6 +363,7 @@ export default function RegistroForm({ initialTipo }: { initialTipo: Tipo }) {
                 className="input-base"
                 placeholder="76.123.456-7"
                 maxLength={14}
+                autoComplete="off"
               />
               {errors.rut && <p className="error-text">{errors.rut}</p>}
             </div>
@@ -335,14 +371,12 @@ export default function RegistroForm({ initialTipo }: { initialTipo: Tipo }) {
               <label className="label-base">
                 {isSeller ? 'Giro / actividad principal' : 'Rubro o sector'}
               </label>
-              <input
-                type="text"
+              <GiroSelector
                 value={form.giro}
-                onChange={(e) => update('giro', e.target.value)}
-                className="input-base"
+                onChange={(v) => update('giro', v)}
                 placeholder={
                   isSeller
-                    ? 'Ej: Fabricación e importación de químicos industriales'
+                    ? 'Ej: Venta al por mayor de químicos industriales'
                     : 'Ej: Planta de alimentos'
                 }
               />
@@ -359,17 +393,23 @@ export default function RegistroForm({ initialTipo }: { initialTipo: Tipo }) {
                     onChange={(e) => update('websiteUrl', e.target.value)}
                     className="input-base"
                     placeholder="https://miempresa.cl"
+                    autoComplete="url"
                   />
                 </div>
                 <div>
                   <label className="label-base">Teléfono comercial</label>
-                  <input
-                    type="tel"
+                  <PhoneInput
                     value={form.contactPhone}
-                    onChange={(e) => update('contactPhone', e.target.value)}
-                    className="input-base"
-                    placeholder="+56 2 ..."
+                    onChange={(v) => update('contactPhone', v)}
+                    placeholder="2 2345 6789"
                   />
+                  {errors.contactPhone && (
+                    <p className="error-text">{errors.contactPhone}</p>
+                  )}
+                  <p className="helper-text">
+                    Aparecerá públicamente en tu perfil para que compradores
+                    te contacten.
+                  </p>
                 </div>
                 <div className="md:col-span-2">
                   <label className="label-base">Descripción breve</label>
@@ -397,6 +437,7 @@ export default function RegistroForm({ initialTipo }: { initialTipo: Tipo }) {
                     onChange={(e) => update('cargo', e.target.value)}
                     className="input-base"
                     placeholder="Ej: Jefe de compras"
+                    autoComplete="organization-title"
                   />
                 </div>
                 <div>
@@ -421,20 +462,27 @@ export default function RegistroForm({ initialTipo }: { initialTipo: Tipo }) {
 
         {/* Section: Ubicación */}
         <section>
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">
+          <h2 className="text-lg font-semibold text-slate-900 mb-1">
             {isSeller ? 'Ubicación de bodega / oficina' : 'Ubicación de la empresa'}
           </h2>
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <label className="label-base">Región</label>
-              <input
-                type="text"
-                value={form.region}
-                onChange={(e) => update('region', e.target.value)}
-                className="input-base"
-                placeholder="Región Metropolitana"
-              />
-            </div>
+          <p className="text-xs text-slate-500 mb-4">
+            Importante para zonas de despacho y filtros del marketplace.
+          </p>
+
+          <RegionComunaSelector
+            region={form.region}
+            comuna={form.comuna}
+            onChangeRegion={(v) => update('region', v)}
+            onChangeComuna={(v) => update('comuna', v)}
+            required
+          />
+          {(errors.region || errors.comuna) && (
+            <p className="error-text mt-1">
+              {errors.region || errors.comuna}
+            </p>
+          )}
+
+          <div className="grid md:grid-cols-2 gap-4 mt-4">
             <div>
               <label className="label-base">Ciudad</label>
               <input
@@ -442,17 +490,8 @@ export default function RegistroForm({ initialTipo }: { initialTipo: Tipo }) {
                 value={form.ciudad}
                 onChange={(e) => update('ciudad', e.target.value)}
                 className="input-base"
-                placeholder="Santiago"
-              />
-            </div>
-            <div>
-              <label className="label-base">Comuna</label>
-              <input
-                type="text"
-                value={form.comuna}
-                onChange={(e) => update('comuna', e.target.value)}
-                className="input-base"
-                placeholder="Quilicura"
+                placeholder="Ej: Santiago"
+                autoComplete="address-level2"
               />
             </div>
             <div>
@@ -462,7 +501,8 @@ export default function RegistroForm({ initialTipo }: { initialTipo: Tipo }) {
                 value={form.address}
                 onChange={(e) => update('address', e.target.value)}
                 className="input-base"
-                placeholder="Calle 123"
+                placeholder="Calle, número, oficina"
+                autoComplete="street-address"
               />
             </div>
           </div>
