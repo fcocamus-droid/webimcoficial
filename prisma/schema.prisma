@@ -1,5 +1,5 @@
-// IMC Industriales — Marketplace B2B
-// Schema minimal — extender con products, RFQs, etc.
+// IMC Industriales — Marketplace B2B Chile
+// Schema completo: usuarios, empresas, productos, RFQs, mensajes
 
 generator client {
   provider = "prisma-client-js"
@@ -11,11 +11,54 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+// ===== ENUMS =====
+
 enum UserRole {
-  ADMIN     // operations team
-  SELLER    // fabricantes / importadores
-  BUYER     // compradores empresariales
+  ADMIN
+  SELLER
+  BUYER
 }
+
+enum StockStatus {
+  DISPONIBLE
+  A_PEDIDO
+  AGOTADO
+}
+
+enum ProductOrigin {
+  CHILE
+  CHINA
+  USA
+  EUROPA
+  LATAM
+  OTRO
+}
+
+enum RfqStatus {
+  OPEN
+  RESPONDED
+  CLOSED
+  CANCELLED
+}
+
+enum RfqVisibility {
+  PUBLIC      // visible a todos los sellers de la categoría
+  TARGETED    // solo a sellers específicos invitados
+}
+
+enum CertificationType {
+  ISO_9001
+  ISO_14001
+  HACCP
+  BPM
+  GMP
+  KOSHER
+  ORGANICO
+  FDA
+  OTRA
+}
+
+// ===== USERS & COMPANIES =====
 
 model User {
   id            String    @id @default(cuid())
@@ -31,5 +74,284 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
+  companies     Company[]
+  rfqs          Rfq[]
+  messagesFrom  Message[] @relation("MessageFrom")
+  messagesTo    Message[] @relation("MessageTo")
+  favorites     Favorite[]
+  reviewsGiven  Review[]
+
   @@map("users")
+}
+
+model Company {
+  id              String    @id @default(cuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  razonSocial     String
+  rut             String    @unique
+  giro            String?
+  description     String?
+  logoUrl         String?
+  bannerUrl       String?
+  websiteUrl      String?
+
+  // Roles (a company can be both seller and buyer)
+  isSeller        Boolean   @default(false)
+  isBuyer         Boolean   @default(true)
+
+  // Contact
+  contactEmail    String?
+  contactPhone    String?
+
+  // Location (Chile)
+  address         String?
+  comuna          String?
+  region          String?
+  ciudad          String?
+
+  // Verification
+  verified        Boolean   @default(false)
+  verifiedAt      DateTime?
+
+  // Stats (denormalized for performance)
+  ratingAverage   Float?
+  ratingCount     Int       @default(0)
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  certifications  CompanyCertification[]
+  products        Product[]
+  rfqResponses    RfqResponse[]
+  reviewsReceived Review[]
+
+  @@map("companies")
+}
+
+model CompanyCertification {
+  id          String            @id @default(cuid())
+  companyId   String
+  company     Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  type        CertificationType
+  customName  String?           // for OTRA type
+  fileUrl     String?
+  expiresAt   DateTime?
+  verified    Boolean           @default(false)
+  createdAt   DateTime          @default(now())
+
+  @@map("company_certifications")
+}
+
+// ===== CATEGORIES =====
+
+model Category {
+  id           String    @id @default(cuid())
+  slug         String    @unique
+  name         String
+  description  String?
+  icon         String?
+  parentId     String?
+  parent       Category? @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children     Category[] @relation("CategoryHierarchy")
+  sortOrder    Int       @default(0)
+  active       Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+
+  products     Product[]
+  rfqs         Rfq[]
+
+  @@map("categories")
+}
+
+// ===== PRODUCTS =====
+
+model Product {
+  id              String        @id @default(cuid())
+  slug            String        @unique
+  companyId       String
+  company         Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  categoryId      String?
+  category        Category?     @relation(fields: [categoryId], references: [id])
+
+  title           String
+  description     String?
+  shortDescription String?
+  sku             String?
+  brand           String?
+
+  // B2B specific
+  moq             Int           @default(1)        // minimum order quantity
+  unit            String        @default("unidad") // kg, lt, un, caja, palet
+  leadTimeDays    Int?
+  stockStatus     StockStatus   @default(DISPONIBLE)
+  origin          ProductOrigin @default(CHILE)
+
+  // Pricing (base — also see pricing_tiers for volume discounts)
+  basePriceCLP    Float?
+  currency        String        @default("CLP")
+
+  // Media
+  available       Boolean       @default(true)
+  featured        Boolean       @default(false)
+
+  // Specs (flexible)
+  specs           Json?         // { "concentracion": "98%", "pureza": "industrial" }
+
+  // Stats
+  viewCount       Int           @default(0)
+  rfqCount        Int           @default(0)
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  images          ProductImage[]
+  pricingTiers    PricingTier[]
+  rfqs            Rfq[]
+  favorites       Favorite[]
+
+  @@index([companyId])
+  @@index([categoryId])
+  @@index([available])
+  @@map("products")
+}
+
+model ProductImage {
+  id         String  @id @default(cuid())
+  productId  String
+  product    Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url        String
+  alt        String?
+  isPrimary  Boolean @default(false)
+  sortOrder  Int     @default(0)
+  createdAt  DateTime @default(now())
+
+  @@index([productId])
+  @@map("product_images")
+}
+
+model PricingTier {
+  id          String  @id @default(cuid())
+  productId   String
+  product     Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  minQuantity Int
+  priceCLP    Float
+  currency    String  @default("CLP")
+  label       String? // "5+ unidades", "Por palet", etc.
+
+  @@index([productId])
+  @@map("pricing_tiers")
+}
+
+// ===== RFQS (Request For Quote) =====
+
+model Rfq {
+  id              String        @id @default(cuid())
+  number          String        @unique // RFQ-2026-0001
+  buyerId         String
+  buyer           User          @relation(fields: [buyerId], references: [id])
+  productId       String?
+  product         Product?      @relation(fields: [productId], references: [id])
+  categoryId      String?
+  category        Category?     @relation(fields: [categoryId], references: [id])
+
+  title           String
+  description     String
+  quantity        Int
+  unit            String        @default("unidad")
+  budgetMaxCLP    Float?
+  deliveryDeadline DateTime?
+  deliveryLocation String?
+
+  visibility      RfqVisibility @default(PUBLIC)
+  status          RfqStatus     @default(OPEN)
+
+  expiresAt       DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  responses       RfqResponse[]
+  messages        Message[]
+
+  @@index([buyerId])
+  @@index([status])
+  @@index([categoryId])
+  @@map("rfqs")
+}
+
+model RfqResponse {
+  id              String   @id @default(cuid())
+  rfqId           String
+  rfq             Rfq      @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+  sellerCompanyId String
+  sellerCompany   Company  @relation(fields: [sellerCompanyId], references: [id], onDelete: Cascade)
+
+  pricePerUnit    Float
+  totalPrice      Float
+  leadTimeDays    Int?
+  notes           String?
+  attachmentUrl   String?
+
+  status          String   @default("SENT") // SENT, ACCEPTED, REJECTED, WITHDRAWN
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([rfqId, sellerCompanyId])
+  @@index([sellerCompanyId])
+  @@map("rfq_responses")
+}
+
+// ===== MESSAGING =====
+
+model Message {
+  id           String   @id @default(cuid())
+  rfqId        String?
+  rfq          Rfq?     @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+  fromUserId   String
+  fromUser     User     @relation("MessageFrom", fields: [fromUserId], references: [id])
+  toUserId     String
+  toUser       User     @relation("MessageTo", fields: [toUserId], references: [id])
+  body         String
+  attachments  Json?    // [{url, name, size}]
+  readAt       DateTime?
+  createdAt    DateTime @default(now())
+
+  @@index([fromUserId])
+  @@index([toUserId])
+  @@index([rfqId])
+  @@map("messages")
+}
+
+// ===== FAVORITES =====
+
+model Favorite {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId   String?
+  product     Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@unique([userId, productId])
+  @@index([userId])
+  @@map("favorites")
+}
+
+// ===== REVIEWS =====
+
+model Review {
+  id              String   @id @default(cuid())
+  fromUserId      String
+  fromUser        User     @relation(fields: [fromUserId], references: [id])
+  toCompanyId     String
+  toCompany       Company  @relation(fields: [toCompanyId], references: [id], onDelete: Cascade)
+  rating          Int      // 1-5
+  comment         String?
+  rfqId           String?  // optional link to validate real transaction
+  createdAt       DateTime @default(now())
+
+  @@index([toCompanyId])
+  @@map("reviews")
 }
