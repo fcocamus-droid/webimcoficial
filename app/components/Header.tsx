@@ -20,13 +20,34 @@ export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false)
 
   const user = session?.user as any
-  const role = user?.role as 'ADMIN' | 'SELLER' | 'BUYER' | undefined
+  const role = user?.role as
+    | 'SUPERADMIN'
+    | 'SALES_AGENT'
+    | 'ADMIN'
+    | 'SELLER'
+    | 'BUYER'
+    | undefined
   const panelHref =
-    role === 'SELLER'
-      ? '/panel/vendedor'
-      : role === 'ADMIN'
-        ? '/panel/admin'
-        : '/panel/comprador'
+    role === 'SUPERADMIN'
+      ? '/panel/superadmin'
+      : role === 'SALES_AGENT'
+        ? '/panel/agente'
+        : role === 'ADMIN'
+          ? '/panel/admin'
+          : role === 'SELLER'
+            ? '/panel/vendedor'
+            : '/panel/comprador'
+
+  const roleLabel =
+    role === 'SUPERADMIN'
+      ? 'Superadmin'
+      : role === 'SALES_AGENT'
+        ? 'Agente de ventas'
+        : role === 'ADMIN'
+          ? 'Administrador'
+          : role === 'SELLER'
+            ? 'Fabricante / Importador'
+            : 'Comprador'
 
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-slate-200">
@@ -86,11 +107,7 @@ export default function Header() {
                       {user.email}
                     </p>
                     <p className="text-xs mt-1 inline-block px-2 py-0.5 rounded bg-slate-100 text-slate-600">
-                      {role === 'SELLER'
-                        ? 'Fabricante / Importador'
-                        : role === 'ADMIN'
-                          ? 'Administrador'
-                          : 'Comprador'}
+                      {roleLabel}
                     </p>
                   </div>
                   <Link

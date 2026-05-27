@@ -15,8 +15,10 @@ datasource db {
 
 enum UserRole {
   ADMIN
-  SELLER
-  BUYER
+  SUPERADMIN     // dueño de operaciones — puede crear agentes y gestionar todo
+  SALES_AGENT    // agente comercial creado por un SUPERADMIN
+  SELLER         // fabricante / importador
+  BUYER          // comprador empresarial
 }
 
 enum StockStatus {
@@ -67,10 +69,17 @@ model User {
   name          String?
   phone         String?
   role          UserRole  @default(BUYER)
+  active        Boolean   @default(true)
   emailVerified DateTime?
   verifyToken   String?
   resetToken    String?
   resetExpires  DateTime?
+
+  // Self-relation: quién creó este usuario (usado para agentes creados por un superadmin)
+  createdById   String?
+  createdBy     User?     @relation("UserCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdUsers  User[]    @relation("UserCreatedBy")
+
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -81,6 +90,8 @@ model User {
   favorites     Favorite[]
   reviewsGiven  Review[]
 
+  @@index([role])
+  @@index([createdById])
   @@map("users")
 }
 
