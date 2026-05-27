@@ -43,15 +43,23 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           email: user.email,
           name: user.name ?? user.email,
           role: user.role,
+          avatarUrl: user.avatarUrl ?? null,
         } as any
       },
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = (user as any).id
         token.role = (user as any).role
+        token.avatarUrl = (user as any).avatarUrl ?? null
+      }
+      // Permite refrescar la sesión desde el cliente con useSession().update({ ... })
+      if (trigger === 'update' && session) {
+        const s = session as any
+        if (s.avatarUrl !== undefined) token.avatarUrl = s.avatarUrl
+        if (s.name !== undefined) token.name = s.name
       }
       return token
     },
@@ -59,6 +67,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (session.user) {
         ;(session.user as any).id = token.id
         ;(session.user as any).role = token.role
+        ;(session.user as any).avatarUrl = (token as any).avatarUrl ?? null
+        if (typeof token.name === 'string') session.user.name = token.name
       }
       return session
     },

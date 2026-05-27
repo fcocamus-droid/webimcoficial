@@ -70,6 +70,7 @@ model User {
   phone         String?
   role          UserRole  @default(BUYER)
   active        Boolean   @default(true)
+  avatarUrl     String?
   emailVerified DateTime?
   verifyToken   String?
   resetToken    String?
