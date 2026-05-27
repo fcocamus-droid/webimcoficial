@@ -33,17 +33,17 @@ export default async function Home() {
 
       {/* HERO */}
       <section className="bg-navy-700 text-white relative overflow-hidden">
-        {/* Foto warehouse industrial como fondo */}
+        {/* Foto warehouse industrial (espejada) como fondo */}
         <div
           className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: 'url(/img/hero-warehouse.png)' }}
+          style={{
+            backgroundImage: 'url(/img/hero-warehouse.png)',
+            transform: 'scaleX(-1)',
+          }}
           aria-hidden="true"
         />
-        {/* Overlay horizontal: izquierda oscura para texto, derecha clara para foto */}
-        <div
-          className="absolute inset-0 bg-gradient-to-r from-navy-700/92 via-navy-700/65 to-navy-800/30"
-          aria-hidden="true"
-        />
+        {/* Overlay azul intermedio uniforme — legible sin tapar la foto */}
+        <div className="absolute inset-0 bg-navy-700/75" aria-hidden="true" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(245,158,11,0.18),transparent_55%)] pointer-events-none" />
         <div className="absolute top-10 right-10 w-72 h-72 bg-amber-500/10 blur-3xl rounded-full pointer-events-none" />
 

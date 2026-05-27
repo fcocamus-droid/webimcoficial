@@ -28,10 +28,13 @@ export default async function CategoriasIndex() {
         <section className="bg-navy-700 text-white py-14 relative overflow-hidden">
           <div
             className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: 'url(/img/hero-warehouse.png)' }}
+            style={{
+              backgroundImage: 'url(/img/hero-warehouse.png)',
+              transform: 'scaleX(-1)',
+            }}
             aria-hidden="true"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-navy-700/85 via-navy-700/55 to-navy-800/85" aria-hidden="true" />
+          <div className="absolute inset-0 bg-navy-700/75" aria-hidden="true" />
           <div className="container-base text-center relative">
             <h1 className="text-4xl md:text-5xl font-bold mb-3">
               Categorías industriales
