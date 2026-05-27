@@ -45,7 +45,16 @@ const SearchIcon = () => (
   </svg>
 )
 
-const navSections: NavSection[] = [
+type SidebarItem = NavItem & { adminOnly?: boolean }
+type SidebarSection = { title?: string; items: SidebarItem[]; adminOnly?: boolean }
+
+const BoxIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.6}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
+  </svg>
+)
+
+const navSections: SidebarSection[] = [
   { items: [{ href: '/panel', label: 'Escritorio', icon: <HomeIcon /> }] },
   {
     title: 'Mis Guías',
@@ -54,6 +63,13 @@ const navSections: NavSection[] = [
       { href: '/panel/couriers', label: 'Couriers', icon: <InboxIcon /> },
       { href: '/panel/fcl', label: 'Marítimos FCL', icon: <InboxIcon /> },
       { href: '/panel/lcl', label: 'Marítimos LCL', icon: <InboxIcon /> },
+    ],
+  },
+  {
+    title: 'Tienda',
+    adminOnly: true,
+    items: [
+      { href: '/panel/productos', label: 'Productos', icon: <BoxIcon />, adminOnly: true },
     ],
   },
   {
@@ -67,10 +83,19 @@ function PanelInner({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     'Mis Guías': true,
-    'Herramientas': true,
+    'Tienda': true,
     'Mi cuenta': true,
   })
   const { data: session } = useSession()
+  const userRole = (session?.user as any)?.role as 'CLIENT' | 'EXECUTIVE' | 'SUPERADMIN' | undefined
+  const isAdmin = userRole === 'SUPERADMIN' || userRole === 'EXECUTIVE'
+
+  const visibleSections = navSections
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((it) => !it.adminOnly || isAdmin),
+    }))
+    .filter((s) => s.items.length > 0 && (!s.adminOnly || isAdmin))
 
   const isActive = (href: string) => {
     if (href === '/panel') return pathname === '/panel'
@@ -133,7 +158,7 @@ function PanelInner({ children }: { children: React.ReactNode }) {
           `}
         >
           <nav className="px-4 py-6 space-y-5">
-            {navSections.map((section, idx) => (
+            {visibleSections.map((section, idx) => (
               <div key={section.title || `section-${idx}`}>
                 {section.title && (
                   <button
