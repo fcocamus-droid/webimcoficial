@@ -38,6 +38,7 @@ export default async function RfqDetailPage({
               verified: true,
               ratingAverage: true,
               ratingCount: true,
+              userId: true,
             },
           },
         },
@@ -203,12 +204,20 @@ export default async function RfqDetailPage({
                         </span>
                       )}
                     </div>
-                    <Link
-                      href={`/proveedores/${r.sellerCompany.slug}`}
-                      className="text-xs text-amber-600 hover:underline"
-                    >
-                      Ver perfil →
-                    </Link>
+                    <div className="flex gap-3 mt-0.5 text-xs">
+                      <Link
+                        href={`/proveedores/${r.sellerCompany.slug}`}
+                        className="text-amber-600 hover:underline"
+                      >
+                        Ver perfil →
+                      </Link>
+                      <Link
+                        href={`/panel/mensajes?rfq=${rfq.id}&with=${r.sellerCompany.userId}`}
+                        className="text-navy-600 hover:underline font-medium"
+                      >
+                        💬 Escribir al proveedor
+                      </Link>
+                    </div>
                     {r.notes && (
                       <p className="text-sm text-slate-700 mt-3 whitespace-pre-line">
                         {r.notes}

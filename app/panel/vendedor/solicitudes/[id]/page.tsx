@@ -33,6 +33,7 @@ export default async function SolicitudDetailPage({
     include: {
       buyer: {
         select: {
+          id: true,
           name: true,
           email: true,
           companies: {
@@ -165,6 +166,14 @@ export default async function SolicitudDetailPage({
                   .filter(Boolean)
                   .join(', ')}
               </p>
+            )}
+            {myResponse && (
+              <Link
+                href={`/panel/mensajes?rfq=${rfq.id}&with=${rfq.buyer.id}`}
+                className="inline-block mt-2 text-xs text-amber-600 hover:underline font-medium"
+              >
+                💬 Conversar con el comprador →
+              </Link>
             )}
           </div>
           <div>
