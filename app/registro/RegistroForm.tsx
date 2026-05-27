@@ -10,6 +10,7 @@ import PasswordInput from '@/app/components/PasswordInput'
 import PhoneInput from '@/app/components/PhoneInput'
 import RegionComunaSelector from '@/app/components/RegionComunaSelector'
 import GiroSelector from '@/app/components/GiroSelector'
+import WebsiteInput from '@/app/components/WebsiteInput'
 
 type Tipo = 'fabricante' | 'comprador'
 
@@ -387,13 +388,10 @@ export default function RegistroForm({ initialTipo }: { initialTipo: Tipo }) {
               <>
                 <div>
                   <label className="label-base">Sitio web</label>
-                  <input
-                    type="url"
+                  <WebsiteInput
                     value={form.websiteUrl}
-                    onChange={(e) => update('websiteUrl', e.target.value)}
-                    className="input-base"
-                    placeholder="https://miempresa.cl"
-                    autoComplete="url"
+                    onChange={(v) => update('websiteUrl', v)}
+                    placeholder="miempresa.cl"
                   />
                 </div>
                 <div>
