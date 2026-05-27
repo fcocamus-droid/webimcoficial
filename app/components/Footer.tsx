@@ -25,7 +25,7 @@ export default function Footer() {
           <div>
             <h3 className="text-white font-semibold text-sm mb-3">Cuenta</h3>
             <ul className="space-y-2 text-sm">
-              <li><Link href="/registro?tipo=fabricante" className="hover:text-amber-400">Soy Fabricante</Link></li>
+              <li><Link href="/registro?tipo=fabricante" className="hover:text-amber-400">Soy Fabricante o Importador</Link></li>
               <li><Link href="/registro?tipo=comprador" className="hover:text-amber-400">Soy Comprador</Link></li>
               <li><Link href="/login" className="hover:text-amber-400">Iniciar sesión</Link></li>
               <li><Link href="/precios" className="hover:text-amber-400">Planes y precios</Link></li>
