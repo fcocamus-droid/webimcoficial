@@ -101,6 +101,7 @@ model Company {
   userId          String
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  slug            String    @unique
   razonSocial     String
   rut             String    @unique
   giro            String?

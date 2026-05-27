@@ -5,6 +5,7 @@ import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import { registerSchema } from '@/lib/auth-schemas'
+import { uniqueSlug } from '@/lib/slug'
 
 export async function POST(req: Request) {
   let body: unknown
@@ -47,6 +48,12 @@ export async function POST(req: Request) {
   const hashed = await bcrypt.hash(data.password, 10)
   const isSeller = data.tipo === 'fabricante'
 
+  // Slug único basado en la razón social
+  const slug = await uniqueSlug(data.razonSocial, async (s) => {
+    const dup = await prisma.company.findUnique({ where: { slug: s } })
+    return !!dup
+  })
+
   try {
     const result = await prisma.$transaction(async (tx) => {
       const user = await tx.user.create({
@@ -62,6 +69,7 @@ export async function POST(req: Request) {
       const company = await tx.company.create({
         data: {
           userId: user.id,
+          slug,
           razonSocial: data.razonSocial,
           rut: data.rut,
           giro: data.giro || null,
