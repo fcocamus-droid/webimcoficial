@@ -34,8 +34,8 @@ export default function Logo({
   const tagline =
     variant === 'mono-white' ? 'rgba(255,255,255,0.75)' : '#64748B'
 
-  // Si hay tagline, el SVG necesita más altura
-  const viewBox = showTagline ? '0 0 320 86' : '0 0 280 70'
+  // Si hay tagline, el SVG necesita más altura y ancho
+  const viewBox = showTagline ? '0 0 365 88' : '0 0 280 70'
 
   return (
     <svg
@@ -93,12 +93,12 @@ export default function Logo({
             x="62"
             y="58"
             fontFamily="'Inter', system-ui, sans-serif"
-            fontSize="8.5"
-            fontWeight="600"
-            letterSpacing="1.4"
+            fontSize="11"
+            fontWeight="700"
+            letterSpacing="-0.1"
             fill={tagline}
           >
-            INSUMOS · MATERIALES · COMPONENTES INDUSTRIALES
+            Insumos, Materiales y Componentes Industriales
           </text>
         )}
       </g>
