@@ -4,9 +4,11 @@ import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 
 export default function RfqCta({
+  productId,
   productSlug,
   productTitle,
 }: {
+  productId: string
   productSlug: string
   productTitle: string
 }) {
@@ -50,6 +52,15 @@ export default function RfqCta({
     )
   }
 
+  if (role !== 'BUYER') {
+    return (
+      <div className="bg-slate-100 border border-slate-200 rounded-2xl p-5 text-sm text-slate-600">
+        Las solicitudes de cotización están disponibles solo para cuentas de
+        comprador empresarial.
+      </div>
+    )
+  }
+
   return (
     <div className="bg-amber-gradient text-white rounded-2xl p-5">
       <p className="font-bold text-lg mb-1">Solicita una cotización</p>
@@ -57,16 +68,12 @@ export default function RfqCta({
         Envía cantidad, plazo y especificaciones al proveedor de {productTitle}.
         Recibirás la respuesta directo en tu panel.
       </p>
-      <button
-        disabled
-        title="Módulo RFQ en construcción"
-        className="bg-white text-amber-600 font-semibold px-5 py-2.5 rounded-lg opacity-80 cursor-not-allowed"
+      <Link
+        href={`/panel/comprador/rfqs/nueva?productId=${productId}`}
+        className="bg-white text-amber-600 hover:bg-amber-50 font-semibold px-5 py-2.5 rounded-lg inline-block"
       >
-        Solicitar cotización (próximamente)
-      </button>
-      <p className="text-white/70 text-xs mt-2">
-        El flujo de RFQ estará disponible muy pronto.
-      </p>
+        Solicitar cotización →
+      </Link>
     </div>
   )
 }

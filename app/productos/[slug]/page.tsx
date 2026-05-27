@@ -246,7 +246,11 @@ export default async function ProductoDetail({
               </div>
 
               {/* CTA cotización */}
-              <RfqCta productSlug={product.slug} productTitle={product.title} />
+              <RfqCta
+                productId={product.id}
+                productSlug={product.slug}
+                productTitle={product.title}
+              />
             </div>
           </div>
 
