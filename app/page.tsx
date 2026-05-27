@@ -13,6 +13,7 @@ export default function Home() {
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-700">
             <a href="#servicios" className="hover:text-[#F47920] transition-colors">Servicios</a>
             <a href="#cotizar" className="hover:text-[#F47920] transition-colors">Cotizar</a>
+            <Link href="/productos" className="hover:text-[#F47920] transition-colors">Productos</Link>
             <a href="#nosotros" className="hover:text-[#F47920] transition-colors">Nosotros</a>
             <a href="#contacto" className="hover:text-[#F47920] transition-colors">Contacto</a>
           </nav>
