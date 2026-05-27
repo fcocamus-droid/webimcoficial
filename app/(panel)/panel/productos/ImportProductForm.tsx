@@ -85,7 +85,7 @@ export default function ImportProductForm({ categories }: { categories: Category
               className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white"
             >
               {categories.map((c) => (
-                <option key={c.slug} value={c.slug}>{c.icon} {c.name}</option>
+                <option key={c.slug} value={c.slug}>{c.name}</option>
               ))}
             </select>
           </div>
