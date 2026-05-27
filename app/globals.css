@@ -1,11 +1,33 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
+  html { scroll-behavior: smooth; }
   body {
     font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    color: #0f172a;
+    background: #ffffff;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-semibold px-5 py-2.5 rounded-lg shadow-sm shadow-amber-500/20 transition-all;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 bg-white border border-slate-300 hover:border-slate-400 text-slate-900 font-semibold px-5 py-2.5 rounded-lg transition-all;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 text-slate-700 hover:text-amber-600 font-medium px-3 py-2 transition-colors;
+  }
+  .section-title {
+    @apply text-3xl md:text-4xl font-bold text-navy-600 tracking-tight;
+  }
+  .container-base {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
   }
 }
