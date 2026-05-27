@@ -57,13 +57,6 @@ const navSections: NavSection[] = [
     ],
   },
   {
-    title: 'Herramientas',
-    items: [
-      { href: '/panel/cotizar', label: 'Cotizar nuevo envío', icon: <PlusIcon /> },
-      { href: '/panel/calculadora', label: 'Calculadora', icon: <CalcIcon /> },
-    ],
-  },
-  {
     title: 'Mi cuenta',
     items: [{ href: '/panel/perfil', label: 'Perfil', icon: <UserIcon /> }],
   },
