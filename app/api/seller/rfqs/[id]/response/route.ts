@@ -6,6 +6,16 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth-guards'
 import { rfqResponseSchema } from '@/lib/rfq-schemas'
+import { appUrl, sendEmailAsync } from '@/lib/email'
+import RfqResponseEmail from '@/emails/RfqResponseEmail'
+
+function formatCLP(n: number): string {
+  return new Intl.NumberFormat('es-CL', {
+    style: 'currency',
+    currency: 'CLP',
+    maximumFractionDigits: 0,
+  }).format(n)
+}
 
 export async function POST(
   req: Request,
@@ -57,6 +67,18 @@ export async function POST(
       ? data.totalPrice
       : data.pricePerUnit * rfq.quantity
 
+  // Detectamos si era update o create para personalizar el email
+  const existingResponse = await prisma.rfqResponse.findUnique({
+    where: {
+      rfqId_sellerCompanyId: {
+        rfqId: rfq.id,
+        sellerCompanyId: company.id,
+      },
+    },
+    select: { id: true },
+  })
+  const isUpdate = !!existingResponse
+
   const response = await prisma.rfqResponse.upsert({
     where: {
       rfqId_sellerCompanyId: {
@@ -90,7 +112,54 @@ export async function POST(
     data: { status: 'RESPONDED' },
   })
 
+  // Email al buyer
+  notifyBuyer(rfq.id, company.id, isUpdate).catch((e) =>
+    console.error('[rfq notify buyer]', e)
+  )
+
   return NextResponse.json({ response })
+}
+
+async function notifyBuyer(
+  rfqId: string,
+  sellerCompanyId: string,
+  isUpdate: boolean
+): Promise<void> {
+  const rfq = await prisma.rfq.findUnique({
+    where: { id: rfqId },
+    include: {
+      buyer: { select: { email: true } },
+    },
+  })
+  if (!rfq?.buyer?.email) return
+
+  const resp = await prisma.rfqResponse.findUnique({
+    where: {
+      rfqId_sellerCompanyId: { rfqId, sellerCompanyId },
+    },
+    include: {
+      sellerCompany: { select: { razonSocial: true } },
+    },
+  })
+  if (!resp) return
+
+  sendEmailAsync({
+    to: rfq.buyer.email,
+    subject: `${isUpdate ? '🔄 Cotización actualizada' : '💸 Nueva respuesta'}: ${rfq.title}`,
+    react: RfqResponseEmail({
+      appUrl: appUrl(),
+      rfqId: rfq.id,
+      rfqNumber: rfq.number,
+      rfqTitle: rfq.title,
+      sellerCompany: resp.sellerCompany.razonSocial,
+      pricePerUnit: formatCLP(resp.pricePerUnit),
+      totalPrice: formatCLP(resp.totalPrice),
+      unit: rfq.unit,
+      leadTimeDays: resp.leadTimeDays,
+      notes: resp.notes,
+      isUpdate,
+    }),
+  })
 }
 
 export async function DELETE(

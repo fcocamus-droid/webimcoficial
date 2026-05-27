@@ -6,6 +6,8 @@ import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import { registerSchema } from '@/lib/auth-schemas'
 import { uniqueSlug } from '@/lib/slug'
+import { appUrl, sendEmailAsync } from '@/lib/email'
+import WelcomeEmail from '@/emails/WelcomeEmail'
 
 export async function POST(req: Request) {
   let body: unknown
@@ -91,6 +93,19 @@ export async function POST(req: Request) {
       })
 
       return { userId: user.id, companyId: company.id, role: user.role }
+    })
+
+    // Email de bienvenida (no bloquea respuesta)
+    sendEmailAsync({
+      to: data.email,
+      subject: isSeller
+        ? 'Bienvenido a IMC Industriales · Tu cuenta de fabricante está activa'
+        : 'Bienvenido a IMC Industriales · Empieza a cotizar',
+      react: WelcomeEmail({
+        name: data.name,
+        appUrl: appUrl(),
+        role: isSeller ? 'SELLER' : 'BUYER',
+      }),
     })
 
     return NextResponse.json(

@@ -7,6 +7,8 @@ import { prisma } from '@/lib/prisma'
 import { requireRole } from '@/lib/auth-guards'
 import { rfqCreateSchema } from '@/lib/rfq-schemas'
 import { nextRfqNumber } from '@/lib/rfq-number'
+import { appUrl, sendEmailAsync } from '@/lib/email'
+import RfqNewEmail from '@/emails/RfqNewEmail'
 
 export async function GET(req: Request) {
   const guard = await requireRole('BUYER')
@@ -119,6 +121,11 @@ export async function POST(req: Request) {
         .catch(() => {})
     }
 
+    // Notificar a sellers relevantes en background
+    notifyRelevantSellers(created.id).catch((e) =>
+      console.error('[rfq notify sellers]', e)
+    )
+
     return NextResponse.json(
       { ok: true, id: created.id, number: created.number },
       { status: 201 }
@@ -129,5 +136,83 @@ export async function POST(req: Request) {
       { error: 'No pudimos crear la RFQ. Intenta nuevamente.' },
       { status: 500 }
     )
+  }
+}
+
+/**
+ * Busca a los sellers cuya empresa publica productos en la categoría / producto
+ * de la RFQ y les envía email. Cada email es fire-and-forget para no esperar
+ * a Resend antes de responder al cliente.
+ */
+async function notifyRelevantSellers(rfqId: string): Promise<void> {
+  const rfq = await prisma.rfq.findUnique({
+    where: { id: rfqId },
+    include: {
+      buyer: {
+        select: {
+          name: true,
+          companies: { select: { razonSocial: true }, take: 1 },
+        },
+      },
+      product: { select: { title: true } },
+      category: { select: { name: true } },
+    },
+  })
+  if (!rfq || rfq.visibility !== 'PUBLIC') return
+
+  // Sellers cuya empresa tiene productos en la categoría de la RFQ
+  // O cuya empresa publica el producto específico (si productId está definido).
+  const sellerCompanies = await prisma.company.findMany({
+    where: {
+      isSeller: true,
+      products: {
+        some: {
+          available: true,
+          ...(rfq.productId
+            ? { id: rfq.productId }
+            : rfq.categoryId
+              ? { categoryId: rfq.categoryId }
+              : {}),
+        },
+      },
+    },
+    select: {
+      user: { select: { email: true } },
+    },
+    take: 200,
+  })
+
+  const emails = Array.from(
+    new Set(
+      sellerCompanies
+        .map((c) => c.user?.email)
+        .filter((e): e is string => !!e)
+    )
+  )
+  if (emails.length === 0) return
+
+  const buyerCompany = rfq.buyer.companies[0]?.razonSocial ?? null
+
+  for (const email of emails) {
+    sendEmailAsync({
+      to: email,
+      subject: `Nueva cotización: ${rfq.title} (${rfq.number})`,
+      react: RfqNewEmail({
+        appUrl: appUrl(),
+        rfqId: rfq.id,
+        rfqNumber: rfq.number,
+        rfqTitle: rfq.title,
+        rfqDescription: rfq.description,
+        quantity: rfq.quantity,
+        unit: rfq.unit,
+        buyerName: rfq.buyer.name,
+        buyerCompany,
+        categoryName: rfq.category?.name ?? null,
+        productTitle: rfq.product?.title ?? null,
+        deliveryDeadline: rfq.deliveryDeadline
+          ? new Date(rfq.deliveryDeadline).toLocaleDateString('es-CL')
+          : null,
+      }),
+    })
   }
 }
