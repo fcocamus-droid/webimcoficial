@@ -6,6 +6,7 @@ import { auth } from '@/auth'
 
 const tabs = [
   { href: '/panel/superadmin', label: 'Resumen' },
+  { href: '/panel/superadmin/empresas', label: 'Empresas' },
   { href: '/panel/superadmin/agentes', label: 'Agentes' },
 ]
 

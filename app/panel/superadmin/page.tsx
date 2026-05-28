@@ -14,6 +14,7 @@ export default async function SuperadminHome() {
     buyers,
     agents,
     companies,
+    pendingCompanies,
     products,
     rfqsOpen,
     rfqsClosed,
@@ -25,6 +26,7 @@ export default async function SuperadminHome() {
       where: { role: 'SALES_AGENT', createdById: userId },
     }),
     prisma.company.count(),
+    prisma.company.count({ where: { verified: false } }),
     prisma.product.count(),
     prisma.rfq.count({ where: { status: 'OPEN' } }),
     prisma.rfq.count({ where: { status: 'CLOSED' } }),
@@ -35,10 +37,14 @@ export default async function SuperadminHome() {
     { label: 'Fabricantes', value: sellers, accent: 'navy' },
     { label: 'Compradores', value: buyers, accent: 'amber' },
     { label: 'Mis agentes', value: agents, accent: 'verified' },
-    { label: 'Empresas', value: companies, accent: 'navy' },
+    { label: 'Empresas registradas', value: companies, accent: 'navy' },
+    {
+      label: 'Por verificar',
+      value: pendingCompanies,
+      accent: pendingCompanies > 0 ? 'amber' : 'verified',
+    },
     { label: 'Productos', value: products, accent: 'navy' },
     { label: 'RFQs abiertas', value: rfqsOpen, accent: 'amber' },
-    { label: 'RFQs cerradas', value: rfqsClosed, accent: 'navy' },
   ]
 
   return (
@@ -87,14 +93,21 @@ export default async function SuperadminHome() {
 
         <div className="bg-white rounded-2xl border border-slate-200 p-6">
           <h2 className="text-lg font-semibold text-navy-600 mb-2">
-            Por construir
+            Verificación de empresas
           </h2>
-          <ul className="text-sm text-slate-700 space-y-2">
-            <li>· Verificación manual de empresas (RUT + certificaciones)</li>
-            <li>· Asignación de agentes a categorías o sellers</li>
-            <li>· Reportes de actividad de cada agente</li>
-            <li>· Comisiones y métricas comerciales</li>
-          </ul>
+          <p className="text-sm text-slate-600 mb-4">
+            {pendingCompanies > 0
+              ? `Tienes ${pendingCompanies} empresa${pendingCompanies !== 1 ? 's' : ''} esperando verificación. Revisa su RUT y certificaciones antes de aprobarlas.`
+              : 'Todas las empresas están verificadas. ¡Excelente trabajo!'}
+          </p>
+          <Link
+            href="/panel/superadmin/empresas?filter=pending"
+            className="inline-flex bg-amber-500 hover:bg-amber-600 text-white font-semibold px-5 py-2.5 rounded-lg"
+          >
+            {pendingCompanies > 0
+              ? `Revisar empresas pendientes →`
+              : 'Ver todas las empresas →'}
+          </Link>
         </div>
       </div>
     </div>

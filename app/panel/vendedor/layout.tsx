@@ -9,6 +9,9 @@ const tabs = [
   { href: '/panel/vendedor', label: 'Resumen' },
   { href: '/panel/vendedor/productos', label: 'Catálogo' },
   { href: '/panel/vendedor/solicitudes', label: 'Solicitudes' },
+  { href: '/panel/vendedor/certificaciones', label: 'Certificaciones' },
+  { href: '/panel/vendedor/estadisticas', label: 'Estadísticas' },
+  { href: '/panel/vendedor/perfil', label: 'Perfil empresa' },
 ]
 
 export default async function VendedorLayout({

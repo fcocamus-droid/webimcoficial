@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma'
 import { formatCLP } from '@/app/components/ProductCard'
 import ProductGallery from './ProductGallery'
 import RfqCta from './RfqCta'
+import FavoriteButton from '@/app/components/FavoriteButton'
 
 const STOCK_LABEL: Record<string, { label: string; cls: string }> = {
   DISPONIBLE: { label: 'Disponible', cls: 'bg-verified-50 text-verified-600' },
@@ -166,9 +167,12 @@ export default async function ProductoDetail({
                 )}
               </div>
 
-              <h1 className="text-3xl md:text-4xl font-bold text-navy-600 mb-3">
-                {product.title}
-              </h1>
+              <div className="flex items-start justify-between gap-3 mb-3">
+                <h1 className="text-3xl md:text-4xl font-bold text-navy-600">
+                  {product.title}
+                </h1>
+                <FavoriteButton productId={product.id} variant="icon" />
+              </div>
 
               {product.shortDescription && (
                 <p className="text-slate-700 mb-5">{product.shortDescription}</p>
