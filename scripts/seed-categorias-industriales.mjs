@@ -1,6 +1,5 @@
 // scripts/seed-categorias-industriales.mjs
 // Catálogo completo de categorías. Idempotente (upsert por slug).
-// Cada vez que se corre, sincroniza el orden y descripciones.
 
 import 'dotenv/config'
 import { PrismaClient } from '@prisma/client'
@@ -8,7 +7,7 @@ import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 
 const catalog = [
-  // ── Industriales pesadas / técnicas ─────────────
+  // ── Industriales pesadas / técnicas (1-11) ──────
   {
     slug: 'construccion',
     name: 'Construcción y ferretería industrial',
@@ -98,7 +97,7 @@ const catalog = [
     sortOrder: 11,
   },
 
-  // ── Tecnología ──────────────────────────────────
+  // ── Tecnología y oficina (12-13) ────────────────
   {
     slug: 'tecnologia',
     name: 'Tecnología y computación',
@@ -107,15 +106,23 @@ const catalog = [
     icon: '💻',
     sortOrder: 12,
   },
+  {
+    slug: 'oficina',
+    name: 'Oficina y papelería',
+    description:
+      'Suministros, papel, tintas y tóner, archivadores, organizadores y consumibles para operación diaria.',
+    icon: '🖨️',
+    sortOrder: 13,
+  },
 
-  // ── Procesos y consumibles ──────────────────────
+  // ── Materiales y procesos (14-18) ───────────────
   {
     slug: 'quimicos',
     name: 'Químicos industriales',
     description:
       'Soda cáustica, ácidos, solventes, cloro, tratamiento de aguas y procesos productivos.',
     icon: '⚗️',
-    sortOrder: 13,
+    sortOrder: 14,
   },
   {
     slug: 'plasticos',
@@ -123,7 +130,23 @@ const catalog = [
     description:
       'Resinas, PVC, policarbonato, materiales técnicos y termoformados para manufactura.',
     icon: '♻️',
-    sortOrder: 14,
+    sortOrder: 15,
+  },
+  {
+    slug: 'maderas',
+    name: 'Maderas y tableros industriales',
+    description:
+      'MDF, OSB, melaminas, terciados y soluciones para carpintería y construcción a escala.',
+    icon: '🪵',
+    sortOrder: 16,
+  },
+  {
+    slug: 'textil',
+    name: 'Textil industrial y uniformes',
+    description:
+      'Geotextiles, telas técnicas, uniformes corporativos y protección textil industrial.',
+    icon: '🧵',
+    sortOrder: 17,
   },
   {
     slug: 'packaging',
@@ -131,17 +154,25 @@ const catalog = [
     description:
       'PET, doypack, envases cosméticos, etiquetas, packaging biodegradable y soluciones a medida.',
     icon: '📦',
-    sortOrder: 15,
+    sortOrder: 18,
   },
 
-  // ── Alimentación / salud / cuidado ──────────────
+  // ── Alimentación, bebidas, cuidado (19-23) ──────
   {
     slug: 'alimentos',
     name: 'Alimentos y food service',
     description:
       'Insumos cafetería, quesos, salsas, abarrotes y productos para canal HORECA.',
     icon: '🍽️',
-    sortOrder: 16,
+    sortOrder: 19,
+  },
+  {
+    slug: 'bebidas',
+    name: 'Bebidas y licores',
+    description:
+      'Vinos, cervezas, destilados, bebidas y jugos para canal HORECA, retail y eventos.',
+    icon: '🍷',
+    sortOrder: 20,
   },
   {
     slug: 'limpieza',
@@ -149,7 +180,7 @@ const catalog = [
     description:
       'Detergentes, desinfectantes, productos de aseo profesional para edificios, oficinas y plantas.',
     icon: '🧽',
-    sortOrder: 17,
+    sortOrder: 21,
   },
   {
     slug: 'cosmetica',
@@ -157,7 +188,7 @@ const catalog = [
     description:
       'Bases, fragancias, activos e ingredientes para shampoo, cremas y productos personales.',
     icon: '🧴',
-    sortOrder: 18,
+    sortOrder: 22,
   },
   {
     slug: 'suplementos',
@@ -165,17 +196,59 @@ const catalog = [
     description:
       'Proteínas, vitaminas, ingredientes farmacéuticos y materias primas para nutracéuticos.',
     icon: '💊',
-    sortOrder: 19,
+    sortOrder: 23,
   },
 
-  // ── Otros mercados estratégicos ─────────────────
+  // ── Equipamiento especializado (24-27) ──────────
+  {
+    slug: 'medico',
+    name: 'Equipamiento médico y salud',
+    description:
+      'Insumos clínicos, instrumental dental, primeros auxilios y equipamiento para centros de salud.',
+    icon: '🏥',
+    sortOrder: 24,
+  },
+  {
+    slug: 'mobiliario',
+    name: 'Mobiliario corporativo e industrial',
+    description:
+      'Estanterías, lockers, escritorios, sillas operativas y mobiliario técnico para oficinas y bodegas.',
+    icon: '💼',
+    sortOrder: 25,
+  },
+  {
+    slug: 'eventos',
+    name: 'Eventos, sonido y publicidad',
+    description:
+      'Gigantografía, banners, equipos de audio, iluminación escénica, mobiliario y producción de eventos.',
+    icon: '🎉',
+    sortOrder: 26,
+  },
+  {
+    slug: 'transporte',
+    name: 'Transporte y automotriz',
+    description:
+      'Repuestos, baterías, neumáticos, lubricantes auto y accesorios para flotas y talleres.',
+    icon: '🚗',
+    sortOrder: 27,
+  },
+
+  // ── Otros mercados (28-32) ──────────────────────
   {
     slug: 'agricultura',
     name: 'Agricultura y agroindustria',
     description:
       'Fertilizantes, riego tecnificado, fitosanitarios y soluciones para producción agroindustrial.',
     icon: '🌱',
-    sortOrder: 20,
+    sortOrder: 28,
+  },
+  {
+    slug: 'veterinaria',
+    name: 'Veterinaria y mascotas',
+    description:
+      'Insumos veterinarios, alimentos premium y accesorios para clínicas, criaderos y pet shops.',
+    icon: '🐶',
+    sortOrder: 29,
   },
   {
     slug: 'hogar-jardin',
@@ -183,7 +256,7 @@ const catalog = [
     description:
       'Muebles, decoración, iluminación, herramientas de jardín, parrillas, organización y outdoor.',
     icon: '🏡',
-    sortOrder: 21,
+    sortOrder: 30,
   },
   {
     slug: 'deportes-outdoor',
@@ -191,7 +264,15 @@ const catalog = [
     description:
       'Gimnasio, fitness, trekking, camping, ciclismo, running, suplementos deportivos y accesorios.',
     icon: '🏃',
-    sortOrder: 22,
+    sortOrder: 31,
+  },
+  {
+    slug: 'educacion',
+    name: 'Educación y material didáctico',
+    description:
+      'Material escolar, mobiliario educativo, equipos didácticos y juguetería pedagógica para colegios.',
+    icon: '📚',
+    sortOrder: 32,
   },
 ]
 
