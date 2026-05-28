@@ -245,7 +245,7 @@ export default async function RfqDetailPage({
                   </div>
                   <div>
                     <p className="text-xs text-slate-500 uppercase tracking-wider">
-                      Lead time
+                      Plazo de entrega
                     </p>
                     <p className="text-base font-semibold text-slate-900">
                       {r.leadTimeDays ? `${r.leadTimeDays} días` : 'A consultar'}

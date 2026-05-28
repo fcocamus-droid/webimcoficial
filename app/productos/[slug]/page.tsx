@@ -235,7 +235,7 @@ export default async function ProductoDetail({
               <div className="grid grid-cols-2 gap-3 mb-4">
                 <Fact label="MOQ" value={`${product.moq} ${product.unit}`} />
                 <Fact
-                  label="Lead time"
+                  label="Plazo de entrega"
                   value={
                     product.leadTimeDays
                       ? `${product.leadTimeDays} días`

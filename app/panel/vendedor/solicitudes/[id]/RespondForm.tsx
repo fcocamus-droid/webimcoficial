@@ -145,7 +145,7 @@ export default function RespondForm({
             )}
           </div>
           <div>
-            <label className="label-base">Lead time (días)</label>
+            <label className="label-base">Plazo de entrega (días)</label>
             <input
               type="number"
               min={0}
