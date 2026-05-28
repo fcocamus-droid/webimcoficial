@@ -18,9 +18,11 @@ type PreselectedProduct = {
 export default function NuevaRfqForm({
   categories,
   preselectedProduct,
+  preselectedCategoryId,
 }: {
   categories: Category[]
   preselectedProduct: PreselectedProduct | null
+  preselectedCategoryId?: string | null
 }) {
   const router = useRouter()
   const [form, setForm] = useState({
@@ -30,7 +32,8 @@ export default function NuevaRfqForm({
     description: '',
     quantity: preselectedProduct?.moq ?? 1,
     unit: preselectedProduct?.unit || 'unidad',
-    categoryId: preselectedProduct?.categoryId || '',
+    categoryId:
+      preselectedProduct?.categoryId || preselectedCategoryId || '',
     productId: preselectedProduct?.id || '',
     budgetMaxCLP: '' as number | '',
     deliveryDeadline: '',

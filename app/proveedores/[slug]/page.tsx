@@ -4,6 +4,7 @@ import Header from '@/app/components/Header'
 import Footer from '@/app/components/Footer'
 import ProductCard from '@/app/components/ProductCard'
 import { prisma } from '@/lib/prisma'
+import ProveedorCta from './ProveedorCta'
 
 const CERT_LABEL: Record<string, string> = {
   ISO_9001: 'ISO 9001',
@@ -54,7 +55,7 @@ export default async function ProveedorDetail({
   const products = await prisma.product.findMany({
     where: { companyId: company.id, available: true },
     include: {
-      category: { select: { name: true } },
+      category: { select: { id: true, name: true } },
       company: { select: { razonSocial: true, verified: true, slug: true } },
       images: {
         orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }],
@@ -65,6 +66,10 @@ export default async function ProveedorDetail({
     orderBy: [{ featured: 'desc' }, { updatedAt: 'desc' }],
     take: 60,
   })
+
+  // Categoría más usada por el proveedor (para pre-llenar la RFQ del buyer)
+  const defaultCategoryId =
+    products.find((p) => p.category?.id)?.category?.id ?? null
 
   return (
     <>
@@ -147,7 +152,7 @@ export default async function ProveedorDetail({
           <div className="container-base">
             <div className="grid lg:grid-cols-[1fr_320px] gap-6 items-start">
               {/* Productos */}
-              <div>
+              <div id="catalogo">
                 <h2 className="text-2xl font-bold text-navy-600 mb-5">
                   Catálogo del proveedor
                 </h2>
@@ -243,19 +248,13 @@ export default async function ProveedorDetail({
                   </div>
                 )}
 
-                <div className="bg-amber-gradient text-white rounded-2xl p-5">
-                  <p className="font-bold mb-1">Solicita una cotización</p>
-                  <p className="text-white/90 text-sm mb-3">
-                    Contacta directamente a este proveedor a través del
-                    marketplace.
-                  </p>
-                  <Link
-                    href="/registro?tipo=comprador"
-                    className="bg-white text-amber-600 hover:bg-amber-50 font-semibold px-4 py-2 rounded-lg text-sm inline-block"
-                  >
-                    Crear cuenta de comprador →
-                  </Link>
-                </div>
+                <ProveedorCta
+                  companyId={company.id}
+                  companySlug={company.slug}
+                  companyRazonSocial={company.razonSocial}
+                  hasProducts={products.length > 0}
+                  defaultCategoryId={defaultCategoryId}
+                />
               </aside>
             </div>
           </div>

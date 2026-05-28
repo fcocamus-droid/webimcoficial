@@ -9,7 +9,7 @@ export const metadata = { title: 'Nueva cotización · Panel Comprador' }
 export default async function NuevaRfqPage({
   searchParams,
 }: {
-  searchParams: { productId?: string }
+  searchParams: { productId?: string; categoryId?: string }
 }) {
   const session = await auth()
   if (!session?.user) redirect('/login')
@@ -77,6 +77,7 @@ export default async function NuevaRfqPage({
       <NuevaRfqForm
         categories={categories}
         preselectedProduct={preselectedProduct}
+        preselectedCategoryId={searchParams.categoryId || null}
       />
     </div>
   )
