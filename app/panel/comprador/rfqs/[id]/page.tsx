@@ -3,7 +3,9 @@ import { notFound } from 'next/navigation'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { formatCLP } from '@/app/components/ProductCard'
+import { withIva } from '@/lib/iva'
 import RfqActions from './RfqActions'
+import AcceptResponseButton from './AcceptResponseButton'
 
 export const metadata = { title: 'Detalle de cotización · Panel Comprador' }
 
@@ -234,13 +236,19 @@ export default async function RfqDetailPage({
                     <p className="text-xl font-bold text-navy-600">
                       {formatCLP(r.pricePerUnit) || '—'}
                     </p>
+                    <p className="text-[10px] text-slate-500">
+                      c/IVA {formatCLP(withIva(r.pricePerUnit))}
+                    </p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-500 uppercase tracking-wider">
-                      Total
+                      Total neto
                     </p>
                     <p className="text-xl font-bold text-navy-600">
                       {formatCLP(r.totalPrice) || '—'}
+                    </p>
+                    <p className="text-[10px] text-slate-500">
+                      c/IVA {formatCLP(withIva(r.totalPrice))}
                     </p>
                   </div>
                   <div>
@@ -260,6 +268,32 @@ export default async function RfqDetailPage({
                     </p>
                   </div>
                 </div>
+
+                {/* Botón aceptar */}
+                {rfq.status !== 'CLOSED' &&
+                  rfq.status !== 'CANCELLED' &&
+                  r.status === 'SENT' && (
+                    <div className="mt-4 pt-4 border-t border-slate-100 flex justify-end">
+                      <AcceptResponseButton
+                        rfqId={rfq.id}
+                        responseId={r.id}
+                        sellerName={r.sellerCompany.razonSocial}
+                      />
+                    </div>
+                  )}
+                {r.status === 'ACCEPTED' && (
+                  <div className="mt-4 pt-4 border-t border-verified-200 flex items-center gap-2 text-sm">
+                    <span className="text-2xl">🤝</span>
+                    <p className="font-semibold text-verified-600">
+                      Aceptaste esta cotización — el proveedor fue notificado.
+                    </p>
+                  </div>
+                )}
+                {r.status === 'REJECTED' && (
+                  <div className="mt-4 pt-4 border-t border-slate-100 text-sm text-slate-500">
+                    No elegiste esta cotización.
+                  </div>
+                )}
               </div>
             )
           })}
