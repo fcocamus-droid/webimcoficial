@@ -1,10 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { signIn } from 'next-auth/react'
 import PasswordInput from '@/app/components/PasswordInput'
+
+const REMEMBER_KEY = 'imc:rememberEmail'
 
 export default function LoginForm() {
   const router = useRouter()
@@ -13,8 +15,22 @@ export default function LoginForm() {
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [remember, setRemember] = useState(true)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Cargar email recordado al montar
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(REMEMBER_KEY)
+      if (saved) {
+        setEmail(saved)
+        setRemember(true)
+      }
+    } catch {
+      /* localStorage puede estar bloqueado */
+    }
+  }, [])
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -31,6 +47,18 @@ export default function LoginForm() {
         setLoading(false)
         return
       }
+
+      // Guardar / limpiar el email recordado
+      try {
+        if (remember) {
+          localStorage.setItem(REMEMBER_KEY, email.trim().toLowerCase())
+        } else {
+          localStorage.removeItem(REMEMBER_KEY)
+        }
+      } catch {
+        /* ignore */
+      }
+
       router.push(callbackUrl)
       router.refresh()
     } catch {
@@ -83,6 +111,18 @@ export default function LoginForm() {
           />
         </div>
 
+        <label className="flex items-center gap-2 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={remember}
+            onChange={(e) => setRemember(e.target.checked)}
+            className="h-4 w-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+          />
+          <span className="text-sm text-slate-700">
+            Recordar mi email en este dispositivo
+          </span>
+        </label>
+
         {error && (
           <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
             {error}
@@ -107,6 +147,10 @@ export default function LoginForm() {
           </Link>
         </p>
       </form>
+
+      <p className="text-center text-xs text-slate-500 mt-4">
+        Tu sesión se mantiene activa por 30 días.
+      </p>
     </div>
   )
 }
