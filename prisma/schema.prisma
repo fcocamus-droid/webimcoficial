@@ -212,6 +212,9 @@ model Product {
   // Specs (flexible)
   specs           Json?         // { "concentracion": "98%", "pureza": "industrial" }
 
+  // Documento de ficha técnica (PDF)
+  datasheetUrl    String?
+
   // Stats
   viewCount       Int           @default(0)
   rfqCount        Int           @default(0)

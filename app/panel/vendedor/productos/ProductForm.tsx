@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import { withIva, ivaAmount, formatCLP } from '@/lib/iva'
 
 type Category = { id: string; name: string }
 
@@ -70,17 +71,23 @@ export default function ProductForm({
   productId,
   initialImages = [],
   initialValues,
+  initialDatasheetUrl = null,
   categories,
 }: {
   mode: 'create' | 'edit'
   productId?: string
   initialImages?: ProductImage[]
   initialValues: ProductFormValues
+  initialDatasheetUrl?: string | null
   categories: Category[]
 }) {
   const router = useRouter()
   const [form, setForm] = useState<ProductFormValues>(initialValues)
   const [images, setImages] = useState<ProductImage[]>(initialImages)
+  const [datasheetUrl, setDatasheetUrl] = useState<string | null>(initialDatasheetUrl)
+  const [uploadingDoc, setUploadingDoc] = useState(false)
+  const [docError, setDocError] = useState<string | null>(null)
+  const docFileRef = useRef<HTMLInputElement>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [serverError, setServerError] = useState<string | null>(null)
   const [savedMsg, setSavedMsg] = useState<string | null>(null)
@@ -283,6 +290,41 @@ export default function ProductForm({
     })
   }
 
+  // Documento ficha técnica
+  const onUploadDoc = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !productId) return
+    setUploadingDoc(true)
+    setDocError(null)
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      const res = await fetch(
+        `/api/seller/products/${productId}/datasheet`,
+        { method: 'POST', body: fd }
+      )
+      const data = await res.json()
+      if (!res.ok) setDocError(data.error || 'Error al subir')
+      else setDatasheetUrl(data.datasheetUrl)
+    } catch {
+      setDocError('Error de red')
+    } finally {
+      setUploadingDoc(false)
+      if (docFileRef.current) docFileRef.current.value = ''
+    }
+  }
+  const onRemoveDoc = async () => {
+    if (!productId || !datasheetUrl) return
+    if (!confirm('¿Eliminar la ficha técnica de este producto?')) return
+    setUploadingDoc(true)
+    const res = await fetch(
+      `/api/seller/products/${productId}/datasheet`,
+      { method: 'DELETE' }
+    )
+    if (res.ok) setDatasheetUrl(null)
+    setUploadingDoc(false)
+  }
+
   return (
     <form onSubmit={onSubmit} className="space-y-8">
       {/* Datos básicos */}
@@ -439,7 +481,10 @@ export default function ProductForm({
             />
           </div>
           <div>
-            <label className="label-base">Precio base (CLP)</label>
+            <label className="label-base">
+              Precio base neto (CLP){' '}
+              <span className="text-slate-400 text-xs font-normal">— sin IVA</span>
+            </label>
             <input
               type="number"
               min={0}
@@ -453,7 +498,20 @@ export default function ProductForm({
               className="input-base"
               placeholder="Ej: 25000"
             />
-            <p className="helper-text">Precio referencial por {form.unit || 'unidad'}.</p>
+            {form.basePriceCLP && Number(form.basePriceCLP) > 0 ? (
+              <p className="mt-1 text-xs text-slate-600 bg-amber-50 border border-amber-200 rounded px-2 py-1.5">
+                + IVA 19% ({formatCLP(ivaAmount(Number(form.basePriceCLP)))}) ={' '}
+                <strong className="text-navy-600">
+                  {formatCLP(withIva(Number(form.basePriceCLP)))}
+                </strong>{' '}
+                final por {form.unit || 'unidad'}
+              </p>
+            ) : (
+              <p className="helper-text">
+                Precio neto por {form.unit || 'unidad'}. El IVA (19%) se calcula
+                automáticamente.
+              </p>
+            )}
           </div>
         </div>
 
@@ -465,7 +523,8 @@ export default function ProductForm({
                 Descuentos por volumen
               </h4>
               <p className="text-xs text-slate-500">
-                Define precios distintos a partir de cierta cantidad mínima.
+                Define precios netos distintos a partir de cierta cantidad
+                mínima. El IVA 19% se calcula automáticamente.
               </p>
             </div>
             <button
@@ -485,8 +544,9 @@ export default function ProductForm({
               {form.pricingTiers.map((t, i) => (
                 <div
                   key={i}
-                  className="grid grid-cols-1 md:grid-cols-[110px_140px_1fr_auto] gap-2 items-center bg-slate-50 rounded-lg p-2"
+                  className="bg-slate-50 rounded-lg p-2"
                 >
+                <div className="grid grid-cols-1 md:grid-cols-[110px_140px_1fr_auto] gap-2 items-center">
                   <input
                     type="number"
                     min={1}
@@ -502,7 +562,7 @@ export default function ProductForm({
                   <input
                     type="number"
                     min={0}
-                    placeholder="Precio CLP"
+                    placeholder="Precio neto"
                     value={t.priceCLP}
                     onChange={(e) =>
                       updateTier(i, {
@@ -525,6 +585,16 @@ export default function ProductForm({
                   >
                     Quitar
                   </button>
+                </div>
+                  {/* Helper IVA para este tier */}
+                  {t.priceCLP !== '' && Number(t.priceCLP) > 0 && (
+                    <p className="mt-1.5 text-[11px] text-slate-600 px-1">
+                      Con IVA 19%:{' '}
+                      <strong className="text-navy-600">
+                        {formatCLP(withIva(Number(t.priceCLP)))}
+                      </strong>
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
@@ -615,6 +685,75 @@ export default function ProductForm({
           </button>
         </div>
       </Section>
+
+      {/* Documentos técnicos — solo en modo edit */}
+      {mode === 'edit' && productId && (
+        <Section title="Documentos técnicos">
+          <p className="text-sm text-slate-600 mb-4">
+            Sube la <strong>ficha técnica oficial</strong> del producto en
+            formato PDF (hasta 10MB). Aparecerá como botón de descarga en el
+            detalle público para que los compradores tomen decisiones
+            informadas.
+          </p>
+
+          {datasheetUrl ? (
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex items-center gap-3 flex-wrap">
+              <div className="w-12 h-12 bg-red-500 text-white rounded-lg flex items-center justify-center font-bold text-sm shrink-0">
+                PDF
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-slate-900">
+                  Ficha técnica cargada
+                </p>
+                <p className="text-xs text-slate-500 truncate">
+                  Los compradores podrán descargarla desde el producto.
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <a
+                  href={datasheetUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-secondary text-sm py-2"
+                >
+                  📎 Ver PDF
+                </a>
+                <button
+                  type="button"
+                  onClick={onRemoveDoc}
+                  disabled={uploadingDoc}
+                  className="text-sm font-medium text-red-600 hover:text-red-700 px-3 py-2"
+                >
+                  Quitar
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center">
+              <div className="text-4xl mb-2">📄</div>
+              <p className="text-sm text-slate-600 mb-3">
+                Aún no has subido una ficha técnica para este producto.
+              </p>
+              <button
+                type="button"
+                onClick={() => docFileRef.current?.click()}
+                disabled={uploadingDoc}
+                className="btn-primary text-sm py-2"
+              >
+                {uploadingDoc ? 'Subiendo…' : '📤 Subir ficha técnica (PDF)'}
+              </button>
+            </div>
+          )}
+          <input
+            ref={docFileRef}
+            type="file"
+            accept="application/pdf"
+            onChange={onUploadDoc}
+            className="hidden"
+          />
+          {docError && <p className="error-text mt-2">{docError}</p>}
+        </Section>
+      )}
 
       {/* Imágenes — solo en modo edit */}
       {mode === 'edit' && productId && (

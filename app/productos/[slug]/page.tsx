@@ -4,6 +4,7 @@ import Header from '@/app/components/Header'
 import Footer from '@/app/components/Footer'
 import { prisma } from '@/lib/prisma'
 import { formatCLP } from '@/app/components/ProductCard'
+import { withIva } from '@/lib/iva'
 import ProductGallery from './ProductGallery'
 import RfqCta from './RfqCta'
 import FavoriteButton from '@/app/components/FavoriteButton'
@@ -183,7 +184,7 @@ export default async function ProductoDetail({
                 {product.basePriceCLP ? (
                   <div>
                     <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">
-                      Precio base
+                      Precio base · neto
                     </p>
                     <div className="flex items-baseline gap-2">
                       <p className="text-3xl font-bold text-navy-600">
@@ -191,8 +192,18 @@ export default async function ProductoDetail({
                       </p>
                       <p className="text-sm text-slate-500">/ {product.unit}</p>
                     </div>
-                    <p className="text-xs text-slate-500 mt-1">
-                      Precio referencial sin IVA. Cotiza para volumen y plazos.
+                    <div className="mt-2 text-sm text-slate-600">
+                      <span className="text-slate-500">+ IVA 19% =</span>{' '}
+                      <strong className="text-slate-900">
+                        {formatCLP(withIva(product.basePriceCLP))}
+                      </strong>{' '}
+                      <span className="text-xs text-slate-500">
+                        / {product.unit} final
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-2 italic">
+                      Precio referencial. Cotiza para volumen, plazos y
+                      condiciones específicas.
                     </p>
                   </div>
                 ) : (
@@ -205,7 +216,7 @@ export default async function ProductoDetail({
                 {product.pricingTiers.length > 0 && (
                   <div className="mt-4 pt-4 border-t border-slate-100">
                     <p className="text-xs text-slate-500 uppercase tracking-wider mb-2">
-                      Descuentos por volumen
+                      Descuentos por volumen (precios netos)
                     </p>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {product.pricingTiers.map((t) => (
@@ -218,6 +229,9 @@ export default async function ProductoDetail({
                           </p>
                           <p className="font-bold text-navy-600">
                             {formatCLP(t.priceCLP)}
+                          </p>
+                          <p className="text-[10px] text-slate-500 mt-0.5">
+                            c/IVA {formatCLP(withIva(t.priceCLP))}
                           </p>
                           {t.label && (
                             <p className="text-xs text-amber-600 mt-0.5">
@@ -248,6 +262,31 @@ export default async function ProductoDetail({
                   value={ORIGIN_LABEL[product.origin] || product.origin}
                 />
               </div>
+
+              {/* Ficha técnica */}
+              {product.datasheetUrl && (
+                <a
+                  href={product.datasheetUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mb-4 flex items-center gap-3 bg-white border border-slate-200 hover:border-navy-600 rounded-xl p-3 transition-colors group"
+                >
+                  <div className="w-10 h-10 bg-red-500 text-white rounded-lg flex items-center justify-center font-bold text-xs shrink-0">
+                    PDF
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-slate-900 group-hover:text-navy-600">
+                      Ficha técnica del producto
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      Documento oficial con specs completas
+                    </p>
+                  </div>
+                  <span className="text-amber-600 text-sm font-medium">
+                    Descargar →
+                  </span>
+                </a>
+              )}
 
               {/* CTA cotización */}
               <RfqCta

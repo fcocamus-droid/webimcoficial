@@ -104,6 +104,7 @@ export default async function EditarProductoPage({
         productId={product.id}
         initialValues={initialValues}
         initialImages={images}
+        initialDatasheetUrl={product.datasheetUrl}
         categories={categories}
       />
     </div>
