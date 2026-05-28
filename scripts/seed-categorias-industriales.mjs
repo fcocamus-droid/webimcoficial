@@ -1,15 +1,12 @@
 // scripts/seed-categorias-industriales.mjs
-// Agrega 13 categorías industriales nuevas y reordena el sortOrder
-// para que las pesadas industriales aparezcan primero.
+// Catálogo completo de categorías. Idempotente (upsert por slug).
+// Cada vez que se corre, sincroniza el orden y descripciones.
 
 import 'dotenv/config'
 import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
-// Orden final del catálogo (sortOrder ascendente).
-// Las que ya existen mantienen su slug y se actualiza sortOrder/desc/icon.
-// Las nuevas se crean con upsert.
 const catalog = [
   // ── Industriales pesadas / técnicas ─────────────
   {
@@ -101,6 +98,16 @@ const catalog = [
     sortOrder: 11,
   },
 
+  // ── Tecnología ──────────────────────────────────
+  {
+    slug: 'tecnologia',
+    name: 'Tecnología y computación',
+    description:
+      'Notebooks, PC, servidores, redes, periféricos, CCTV, domótica, smart home y electrónica empresarial.',
+    icon: '💻',
+    sortOrder: 12,
+  },
+
   // ── Procesos y consumibles ──────────────────────
   {
     slug: 'quimicos',
@@ -108,7 +115,7 @@ const catalog = [
     description:
       'Soda cáustica, ácidos, solventes, cloro, tratamiento de aguas y procesos productivos.',
     icon: '⚗️',
-    sortOrder: 12,
+    sortOrder: 13,
   },
   {
     slug: 'plasticos',
@@ -116,7 +123,7 @@ const catalog = [
     description:
       'Resinas, PVC, policarbonato, materiales técnicos y termoformados para manufactura.',
     icon: '♻️',
-    sortOrder: 13,
+    sortOrder: 14,
   },
   {
     slug: 'packaging',
@@ -124,7 +131,7 @@ const catalog = [
     description:
       'PET, doypack, envases cosméticos, etiquetas, packaging biodegradable y soluciones a medida.',
     icon: '📦',
-    sortOrder: 14,
+    sortOrder: 15,
   },
 
   // ── Alimentación / salud / cuidado ──────────────
@@ -134,7 +141,7 @@ const catalog = [
     description:
       'Insumos cafetería, quesos, salsas, abarrotes y productos para canal HORECA.',
     icon: '🍽️',
-    sortOrder: 15,
+    sortOrder: 16,
   },
   {
     slug: 'limpieza',
@@ -142,7 +149,7 @@ const catalog = [
     description:
       'Detergentes, desinfectantes, productos de aseo profesional para edificios, oficinas y plantas.',
     icon: '🧽',
-    sortOrder: 16,
+    sortOrder: 17,
   },
   {
     slug: 'cosmetica',
@@ -150,7 +157,7 @@ const catalog = [
     description:
       'Bases, fragancias, activos e ingredientes para shampoo, cremas y productos personales.',
     icon: '🧴',
-    sortOrder: 17,
+    sortOrder: 18,
   },
   {
     slug: 'suplementos',
@@ -158,7 +165,7 @@ const catalog = [
     description:
       'Proteínas, vitaminas, ingredientes farmacéuticos y materias primas para nutracéuticos.',
     icon: '💊',
-    sortOrder: 18,
+    sortOrder: 19,
   },
 
   // ── Otros mercados estratégicos ─────────────────
@@ -168,7 +175,23 @@ const catalog = [
     description:
       'Fertilizantes, riego tecnificado, fitosanitarios y soluciones para producción agroindustrial.',
     icon: '🌱',
-    sortOrder: 19,
+    sortOrder: 20,
+  },
+  {
+    slug: 'hogar-jardin',
+    name: 'Hogar y jardín',
+    description:
+      'Muebles, decoración, iluminación, herramientas de jardín, parrillas, organización y outdoor.',
+    icon: '🏡',
+    sortOrder: 21,
+  },
+  {
+    slug: 'deportes-outdoor',
+    name: 'Deportes y outdoor',
+    description:
+      'Gimnasio, fitness, trekking, camping, ciclismo, running, suplementos deportivos y accesorios.',
+    icon: '🏃',
+    sortOrder: 22,
   },
 ]
 
@@ -191,7 +214,9 @@ for (const c of catalog) {
       },
     })
     updated++
-    console.log(`✓ updated  · ${c.sortOrder.toString().padStart(2)} · ${c.slug}`)
+    console.log(
+      `✓ updated  · ${c.sortOrder.toString().padStart(2)} · ${c.slug}`
+    )
   } else {
     await prisma.category.create({
       data: {
@@ -204,7 +229,9 @@ for (const c of catalog) {
       },
     })
     created++
-    console.log(`✓ NEW      · ${c.sortOrder.toString().padStart(2)} · ${c.slug}`)
+    console.log(
+      `✓ NEW      · ${c.sortOrder.toString().padStart(2)} · ${c.slug}`
+    )
   }
 }
 
