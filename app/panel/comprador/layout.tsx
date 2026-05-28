@@ -4,6 +4,7 @@ import Header from '@/app/components/Header'
 import Footer from '@/app/components/Footer'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
+import { formatRut } from '@/lib/rut'
 
 const tabs = [
   { href: '/panel/comprador', label: 'Resumen' },
@@ -39,7 +40,7 @@ export default async function CompradorLayout({
               {company?.razonSocial || session.user.name || session.user.email}
             </h1>
             {company?.rut && (
-              <p className="text-white/90 text-sm mt-1">RUT {company.rut}</p>
+              <p className="text-white/90 text-sm mt-1">RUT {formatRut(company.rut)}</p>
             )}
           </div>
         </div>

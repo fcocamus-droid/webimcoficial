@@ -7,6 +7,7 @@ import RegionComunaSelector from '@/app/components/RegionComunaSelector'
 import GiroSelector from '@/app/components/GiroSelector'
 import WebsiteInput from '@/app/components/WebsiteInput'
 import { extractClNumber } from '@/lib/phone-cl'
+import { formatRut } from '@/lib/rut'
 
 type Company = {
   slug: string
@@ -119,7 +120,7 @@ export default function PerfilEmpresaClient({
         </p>
         <div className="grid sm:grid-cols-2 gap-3">
           <DisabledField label="Razón social" value={company.razonSocial} />
-          <DisabledField label="RUT" value={company.rut} />
+          <DisabledField label="RUT" value={formatRut(company.rut)} />
         </div>
       </Section>
 

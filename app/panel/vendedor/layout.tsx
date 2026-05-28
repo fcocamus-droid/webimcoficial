@@ -4,6 +4,7 @@ import Header from '@/app/components/Header'
 import Footer from '@/app/components/Footer'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
+import { formatRut } from '@/lib/rut'
 
 const tabs = [
   { href: '/panel/vendedor', label: 'Resumen' },
@@ -44,7 +45,7 @@ export default async function VendedorLayout({
                   {company?.razonSocial || session.user.name || session.user.email}
                 </h1>
                 <p className="text-blue-200 text-sm mt-1">
-                  {company?.rut ? `RUT ${company.rut} · ` : ''}
+                  {company?.rut ? `RUT ${formatRut(company.rut)} · ` : ''}
                   {company?.verified ? (
                     <span className="text-verified-400">✓ Verificado</span>
                   ) : (

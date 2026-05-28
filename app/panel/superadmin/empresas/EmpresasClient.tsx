@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { formatRut } from '@/lib/rut'
 
 type Company = {
   id: string
@@ -177,7 +178,7 @@ export default function EmpresasClient({
                             {c.razonSocial}
                           </p>
                           <p className="text-xs text-slate-500">
-                            RUT {c.rut} · {c.userEmail}
+                            RUT {formatRut(c.rut)} · {c.userEmail}
                           </p>
                           {c.giro && (
                             <p className="text-xs text-slate-400 truncate">
