@@ -6,6 +6,7 @@ import { formatCLP } from '@/app/components/ProductCard'
 import { withIva } from '@/lib/iva'
 import RfqActions from './RfqActions'
 import AcceptResponseButton from './AcceptResponseButton'
+import ReviewForm from './ReviewForm'
 
 export const metadata = { title: 'Detalle de cotización · Panel Comprador' }
 
@@ -50,6 +51,22 @@ export default async function RfqDetailPage({
   })
 
   if (!rfq) notFound()
+
+  // Reseñas ya dejadas por el buyer para esta RFQ (puede haber varias si en
+  // el futuro acepta múltiples, hoy solo una por RFQ)
+  const existingReviews = await prisma.review.findMany({
+    where: { fromUserId: userId, rfqId: rfq.id },
+    select: {
+      id: true,
+      toCompanyId: true,
+      rating: true,
+      comment: true,
+      createdAt: true,
+    },
+  })
+  const reviewByCompanyId = new Map(
+    existingReviews.map((r) => [r.toCompanyId, r])
+  )
 
   const badge = STATUS_BADGE[rfq.status] || STATUS_BADGE.OPEN
   const activeResponses = rfq.responses.filter((r) => r.status !== 'WITHDRAWN')
@@ -282,12 +299,30 @@ export default async function RfqDetailPage({
                     </div>
                   )}
                 {r.status === 'ACCEPTED' && (
-                  <div className="mt-4 pt-4 border-t border-verified-200 flex items-center gap-2 text-sm">
-                    <span className="text-2xl">🤝</span>
-                    <p className="font-semibold text-verified-600">
-                      Aceptaste esta cotización — el proveedor fue notificado.
-                    </p>
-                  </div>
+                  <>
+                    <div className="mt-4 pt-4 border-t border-verified-200 flex items-center gap-2 text-sm">
+                      <span className="text-2xl">🤝</span>
+                      <p className="font-semibold text-verified-600">
+                        Aceptaste esta cotización — el proveedor fue notificado.
+                      </p>
+                    </div>
+                    <div className="mt-4">
+                      <ReviewForm
+                        rfqId={rfq.id}
+                        toCompanyId={r.sellerCompany.id}
+                        sellerName={r.sellerCompany.razonSocial}
+                        existingReview={(() => {
+                          const ex = reviewByCompanyId.get(r.sellerCompany.id)
+                          if (!ex) return null
+                          return {
+                            rating: ex.rating,
+                            comment: ex.comment,
+                            createdAt: ex.createdAt.toISOString(),
+                          }
+                        })()}
+                      />
+                    </div>
+                  </>
                 )}
                 {r.status === 'REJECTED' && (
                   <div className="mt-4 pt-4 border-t border-slate-100 text-sm text-slate-500">
