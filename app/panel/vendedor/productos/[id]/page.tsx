@@ -11,11 +11,15 @@ export const metadata = { title: 'Editar producto · Panel Vendedor' }
 
 export default async function EditarProductoPage({
   params,
+  searchParams,
 }: {
   params: { id: string }
+  searchParams: { imported?: string; imgs?: string }
 }) {
   const session = await auth()
   const userId = (session!.user as any).id as string
+  const justImported = searchParams.imported === '1'
+  const importedImgs = Number(searchParams.imgs) || 0
 
   const product = await prisma.product.findFirst({
     where: { id: params.id, company: { userId } },
@@ -98,6 +102,53 @@ export default async function EditarProductoPage({
           </span>
         )}
       </div>
+
+      {justImported && (
+        <div className="mb-6 rounded-2xl border-2 border-verified-200 bg-verified-50 p-5">
+          <div className="flex items-start gap-3">
+            <div className="flex items-center justify-center w-9 h-9 rounded-full bg-verified-600 text-white shrink-0">
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                strokeWidth={2.5}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M4.5 12.75l6 6 9-13.5"
+                />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <h3 className="font-bold text-verified-900 mb-1">
+                Producto importado correctamente
+              </h3>
+              <p className="text-sm text-verified-800">
+                Pre-llenamos lo que pudimos detectar
+                {importedImgs > 0 && (
+                  <>
+                    {' '}
+                    junto con{' '}
+                    <strong>
+                      {importedImgs} imagen{importedImgs === 1 ? '' : 'es'}
+                    </strong>
+                  </>
+                )}
+                . Antes de publicar, completa lo que falte:{' '}
+                <strong>categoría</strong>, <strong>MOQ</strong>,{' '}
+                <strong>plazo de entrega</strong>,{' '}
+                <strong>origen</strong>, y revisa el precio.
+              </p>
+              <p className="text-xs text-verified-700 mt-2">
+                Está <strong>oculto del marketplace</strong> mientras lo
+                editas. Marca “Visible” y guarda cuando esté listo.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <ProductForm
         mode="edit"

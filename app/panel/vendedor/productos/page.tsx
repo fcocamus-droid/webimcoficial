@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
+import ImportFromUrlButton from './ImportFromUrlButton'
 
 export const metadata = { title: 'Catálogo · Panel Vendedor' }
 
@@ -73,6 +74,7 @@ export default async function CatalogoPage({
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <ImportFromUrlButton />
           <Link
             href="/panel/vendedor/productos/importar"
             className="inline-flex items-center gap-1.5 bg-white border border-navy-600 text-navy-700 hover:bg-navy-50 font-semibold px-4 py-2.5 rounded-lg"
