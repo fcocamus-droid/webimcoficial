@@ -72,12 +72,33 @@ export default async function CatalogoPage({
             {searchParams.q ? `que coinciden con "${searchParams.q}"` : 'publicados'}
           </p>
         </div>
-        <Link
-          href="/panel/vendedor/productos/nuevo"
-          className="bg-navy-600 hover:bg-navy-700 text-white font-semibold px-5 py-2.5 rounded-lg"
-        >
-          + Nuevo producto
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href="/panel/vendedor/productos/importar"
+            className="inline-flex items-center gap-1.5 bg-white border border-navy-600 text-navy-700 hover:bg-navy-50 font-semibold px-4 py-2.5 rounded-lg"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"
+              />
+            </svg>
+            Importar masivo
+          </Link>
+          <Link
+            href="/panel/vendedor/productos/nuevo"
+            className="bg-navy-600 hover:bg-navy-700 text-white font-semibold px-5 py-2.5 rounded-lg"
+          >
+            + Nuevo producto
+          </Link>
+        </div>
       </div>
 
       {/* Filtros */}
